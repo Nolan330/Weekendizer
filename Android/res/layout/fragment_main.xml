@@ -7,10 +7,62 @@
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="example.weekendizer.MainActivity$PlaceholderFragment" >
-
-    <TextView
-        android:layout_width="wrap_content"
+    
+    <LinearLayout
+        android:id="@+id/buttonLayout"
+        android:orientation="horizontal"
+        android:layout_centerInParent="true"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content" >
+        
+        <Button
+            android:id="@+id/enterDestination"
+            android:layout_weight="1"
+	        android:layout_width="0dp"
+	        android:layout_height="wrap_content"
+	        android:text="@string/enterDestination"
+	        android:textSize="13sp"
+	        style="?android:attr/borderlessButtonStyle" />
+        
+        <Button
+            android:id="@+id/removeDestination"
+            android:layout_weight="1"
+	        android:layout_width="0dp"
+	        android:layout_height="wrap_content"
+	        android:text="@string/removeDestination"
+	        android:textSize="13sp"
+	        android:visibility="gone"
+	        style="?android:attr/borderlessButtonStyle" />
+        
+        <Button
+            android:id="@+id/weekendize"
+            android:layout_weight="1"
+	        android:layout_width="0dp"
+	        android:layout_height="wrap_content"
+	        android:text="@string/weekendize"
+	        android:textSize="13sp"
+	        style="?android:attr/borderlessButtonStyle" />
+        
+    </LinearLayout>
+    
+    <EditText 
+        android:id="@+id/budgetPrompt"
+        android:layout_above="@id/buttonLayout"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:text="@string/hello_world" />
-
+        android:hint="@string/budgetPrompt" />
+    
+    <Spinner 
+        android:id="@+id/destinationCityPrompt"
+        android:layout_above="@id/budgetPrompt"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone" />
+    
+    <Spinner
+        android:id="@+id/currentCityPrompt"
+        android:layout_above="@id/destinationCityPrompt"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content" />
+    
 </RelativeLayout>

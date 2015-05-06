@@ -1,0 +1,315 @@
+package example.fragments;
+
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.util.HashMap;
+import java.util.Map;
+
+import retrofit.RestAdapter;
+import retrofit.RestAdapter.LogLevel;
+import retrofit.android.AndroidLog;
+import retrofit.client.Request;
+import retrofit.client.UrlConnectionClient;
+import android.app.AlertDialog;
+import android.app.Fragment;
+import android.app.FragmentManager;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.View.OnClickListener;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Spinner;
+import android.widget.Toast;
+import example.utils.AuthUtils;
+import example.web.requests.CityCode;
+import example.web.requests.WeekendPlannerRequest;
+import example.web.responses.AuthTokenResponse;
+import example.web.responses.City;
+import example.web.responses.CityInfoResponse;
+import example.web.responses.WeekendPlannerResponse;
+import example.web.services.CityInfoService;
+import example.web.services.WeekendPlannerService;
+import example.weekendizer.R;
+
+/**
+ * The Fragment responsible for initially prompting the user
+ * for their current city and a budget
+ * TODO: deduce location based on GPS
+ */
+public class PromptFragment extends Fragment
+						    implements OnClickListener {
+	/**
+	 * Fragment manager to swap out fragments 
+	 */
+	private FragmentManager mFragmentManager;
+	
+	/**
+	 * Dialog indicating the server is working
+	 */
+	private AlertDialog mAlertDialog;
+	
+	/**
+	 * Cached references to relevant UI widgets
+	 */
+	private Spinner mCurrentCityPrompt;
+	private Spinner mDestinationCityPrompt;
+	private EditText mBudgetPrompt;
+	private Button mEnterDestinationButton;
+	private Button mRemoveDestinationButton;
+	private Button mWeekendizeButton;
+	
+	/**
+	 * Retrofit services to communicate with the necessary servers
+	 */
+	private CityInfoService mCityInfoService;
+	private WeekendPlannerService mWeekendPlannerService;
+	
+	/**
+	 * A map of City names to IATA Codes for airport identification
+	 */
+	private Map<String, CityCode> mCityCodes;
+	
+	@Override
+	public View onCreateView(LayoutInflater inflater, ViewGroup container,
+			Bundle savedInstanceState) {
+		View rootView = inflater.inflate(R.layout.fragment_main, container,
+				false);
+
+        mFragmentManager = getFragmentManager();
+        
+        mAlertDialog = 
+			new AlertDialog.Builder(getActivity()).create();
+
+		mCurrentCityPrompt =
+			(Spinner) rootView.findViewById(R.id.currentCityPrompt);
+		
+		mDestinationCityPrompt = 
+			(Spinner) rootView.findViewById(R.id.destinationCityPrompt);
+		
+		mBudgetPrompt = 
+			(EditText) rootView.findViewById(R.id.budgetPrompt);
+		
+		mEnterDestinationButton =
+			(Button) rootView.findViewById(R.id.enterDestination);
+		mEnterDestinationButton.setOnClickListener(this);
+		
+		mRemoveDestinationButton =
+			(Button) rootView.findViewById(R.id.removeDestination);
+		mRemoveDestinationButton.setOnClickListener(this);
+		
+		mWeekendizeButton =
+			(Button) rootView.findViewById(R.id.weekendize);
+		mWeekendizeButton.setOnClickListener(this);
+		
+		RestAdapter flightInfoAdapter =
+	    		new RestAdapter.Builder()
+					.setClient(new ExtendedTimeoutUrlConnectionClient())
+					.setEndpoint("https://api.test.sabre.com/")
+					.setLogLevel(LogLevel.FULL)
+					.setLog(new AndroidLog("MYREQUESTS"))
+					.build();
+		
+		mCityInfoService = flightInfoAdapter.create(CityInfoService.class);
+		
+		RestAdapter weekendPlannerAdapter =
+    		new RestAdapter.Builder()
+				.setClient(new ExtendedTimeoutUrlConnectionClient())
+				.setEndpoint("http://10.0.3.2:8080/WeekendPlanner/")
+				.build();
+        
+        mWeekendPlannerService = weekendPlannerAdapter.create(WeekendPlannerService.class);
+        
+        mCityCodes = new HashMap<String, CityCode>();
+        
+		return rootView;
+	}
+	
+	@Override
+	public void onStart() {
+		super.onStart();
+		new InvokeCityInfoServerTask().execute();
+	}
+
+	@Override
+	public void onClick(View v) {
+		switch(v.getId()) {
+		case R.id.enterDestination:
+			toggleVisibility();
+			break;
+		case R.id.removeDestination:
+			toggleVisibility();
+			break;
+		case R.id.weekendize:
+			if(isValidInput())
+				new InvokeWeekendPlannerServerTask().execute();
+			break;
+		}
+	}
+	
+	private void toggleVisibility() {
+		mDestinationCityPrompt.setVisibility(
+			mDestinationCityPrompt.getVisibility() == View.GONE ?
+				View.VISIBLE : View.GONE);
+		
+		mEnterDestinationButton.setVisibility(
+			mEnterDestinationButton.getVisibility() == View.GONE ?
+				View.VISIBLE : View.GONE);
+		
+		mRemoveDestinationButton.setVisibility(
+			mRemoveDestinationButton.getVisibility() == View.GONE ?
+				View.VISIBLE : View.GONE);
+	}
+	
+	private boolean isValidInput() {
+		String curCity = mCurrentCityPrompt.getSelectedItem().toString();
+		String destCity = mDestinationCityPrompt.getSelectedItem().toString();
+		String budget = mBudgetPrompt.getText().toString();
+		
+		if (curCity.isEmpty() || curCity.equals(null)) {
+			showToast("Invalid Current City");
+			return false;
+		}
+		if (curCity.equalsIgnoreCase(destCity) 
+				&& mDestinationCityPrompt.getVisibility() != View.GONE) {
+			showToast("Plan it yourself!");
+			return false;
+		}
+		try {
+			if(Double.valueOf(budget).equals(null)) {
+				showToast("Invalid Budget");
+				return false;
+			}
+		} catch(NumberFormatException e) {
+			showToast("Invalid Budget");
+			return false;
+		}
+		
+		return true;
+	}
+    
+    private class InvokeWeekendPlannerServerTask
+    	extends AsyncTask<Void, Void, WeekendPlannerResponse> {
+    	
+    	@Override
+    	protected void onPreExecute() {
+    		showDialog("Weekendizing",
+    				   "Please wait while your weekend is being planned");
+    	}
+
+		@Override
+		protected WeekendPlannerResponse doInBackground(Void... params) {
+			return mWeekendPlannerService.execute(buildRequest());
+		}
+		
+		@Override
+		protected void onPostExecute(WeekendPlannerResponse response) {
+			mAlertDialog.cancel();
+			// transition fragment based on response
+		}
+		
+		// assumes input has been verified
+		private WeekendPlannerRequest buildRequest() {
+			return new WeekendPlannerRequest(
+				mBudgetPrompt.getText().toString(),
+				mCityCodes.get(
+					mCurrentCityPrompt.getSelectedItem().toString()),
+				mDestinationCityPrompt.getVisibility() == View.GONE ?
+					null : 
+					mCityCodes.get(mDestinationCityPrompt
+										.getSelectedItem().toString()));
+		}
+    }
+    
+    private class InvokeCityInfoServerTask
+    	extends AsyncTask<Void, Void, CityInfoResponse> {
+    	
+    	private String mCountry;
+    	private final String DEFAULT_COUNTRY = "US";
+    	
+    	public InvokeCityInfoServerTask() {
+    		mCountry = DEFAULT_COUNTRY;
+    	}
+     	
+    	public InvokeCityInfoServerTask(String country) {
+    		mCountry = country;
+    	}
+    	
+    	@Override
+    	protected void onPreExecute() {
+    		showDialog("Gathering City Info",
+ 				   	   "Finding eligible cities for your country");
+    	}
+
+		@Override
+		protected CityInfoResponse doInBackground(Void... params) {
+			AuthTokenResponse auth =
+				mCityInfoService.authorize(
+					"Basic " + AuthUtils.getCredential(),
+					"client_credentials");
+			
+			return mCityInfoService.execute(
+				"Bearer " + auth.access_token,
+				mCountry);
+		}
+		
+		@Override
+		protected void onPostExecute(CityInfoResponse response) {
+			for(City city : response.Cities) {
+				mCityCodes.put(
+					city.name, 
+					new CityCode(city.code, city.Links.get(0).href));
+			}
+			
+			ArrayAdapter<String> cityAdapter =
+				new ArrayAdapter<String>(
+					getActivity(),
+					android.R.layout.simple_spinner_item,
+					mCityCodes.keySet().toArray(new String[mCityCodes.size()]));
+			cityAdapter.setDropDownViewResource(
+				android.R.layout.simple_spinner_dropdown_item);
+			
+			mCurrentCityPrompt.setAdapter(cityAdapter);
+			mDestinationCityPrompt.setAdapter(cityAdapter);
+						
+			mAlertDialog.cancel();
+		}
+    }
+    
+    /**
+     *  Tailors the URLConnectionClient to remain open while the server
+     *  completes processing
+     */
+    private class ExtendedTimeoutUrlConnectionClient 
+    									extends UrlConnectionClient {
+    	private final int WAIT_TIME = 30 * 1000;
+    	
+    	@Override 
+    	protected HttpURLConnection openConnection(Request request) 
+    			throws IOException {
+    		HttpURLConnection connection = super.openConnection(request);
+		    connection.setConnectTimeout(WAIT_TIME);
+		    connection.setReadTimeout(WAIT_TIME);
+		    return connection;
+    	}
+    }
+    
+    private void showDialog(String title, String msg) {
+    	mAlertDialog.setTitle(title);
+		mAlertDialog.setMessage(msg);
+		mAlertDialog.show();
+    }
+    
+    /**
+     * Show a toast to the user.
+     */
+    private void showToast(String msg) {
+        Toast.makeText(this.getActivity(),
+                       msg,
+                       Toast.LENGTH_SHORT).show();
+    }
+    
+}
