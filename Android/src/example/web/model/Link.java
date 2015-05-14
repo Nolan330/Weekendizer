@@ -1,4 +1,4 @@
-package example.web.responses;
+package example.web.model;
 
 public class Link {
 

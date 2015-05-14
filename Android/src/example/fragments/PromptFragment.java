@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 import retrofit.RestAdapter;
 import retrofit.RestAdapter.LogLevel;
@@ -12,7 +13,6 @@ import retrofit.client.Request;
 import retrofit.client.UrlConnectionClient;
 import android.app.AlertDialog;
 import android.app.Fragment;
-import android.app.FragmentManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -24,14 +24,10 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
-import example.utils.AuthUtils;
-import example.web.requests.CityCode;
+import example.web.model.City;
 import example.web.requests.WeekendPlannerRequest;
-import example.web.responses.AuthTokenResponse;
-import example.web.responses.City;
 import example.web.responses.CityInfoResponse;
 import example.web.responses.WeekendPlannerResponse;
-import example.web.services.CityInfoService;
 import example.web.services.WeekendPlannerService;
 import example.weekendizer.R;
 
@@ -45,7 +41,7 @@ public class PromptFragment extends Fragment
 	/**
 	 * Fragment manager to swap out fragments 
 	 */
-	private FragmentManager mFragmentManager;
+	//private FragmentManager mFragmentManager;
 	
 	/**
 	 * Dialog indicating the server is working
@@ -63,15 +59,14 @@ public class PromptFragment extends Fragment
 	private Button mWeekendizeButton;
 	
 	/**
-	 * Retrofit services to communicate with the necessary servers
+	 * Retrofit service communicate with our server
 	 */
-	private CityInfoService mCityInfoService;
 	private WeekendPlannerService mWeekendPlannerService;
 	
 	/**
 	 * A map of City names to IATA Codes for airport identification
 	 */
-	private Map<String, CityCode> mCityCodes;
+	private Map<String, City> mCities;
 	
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -79,7 +74,7 @@ public class PromptFragment extends Fragment
 		View rootView = inflater.inflate(R.layout.fragment_main, container,
 				false);
 
-        mFragmentManager = getFragmentManager();
+        //mFragmentManager = getFragmentManager();
         
         mAlertDialog = 
 			new AlertDialog.Builder(getActivity()).create();
@@ -104,26 +99,19 @@ public class PromptFragment extends Fragment
 		mWeekendizeButton =
 			(Button) rootView.findViewById(R.id.weekendize);
 		mWeekendizeButton.setOnClickListener(this);
-		
-		RestAdapter flightInfoAdapter =
-	    		new RestAdapter.Builder()
-					.setClient(new ExtendedTimeoutUrlConnectionClient())
-					.setEndpoint("https://api.test.sabre.com/")
-					.setLogLevel(LogLevel.FULL)
-					.setLog(new AndroidLog("MYREQUESTS"))
-					.build();
-		
-		mCityInfoService = flightInfoAdapter.create(CityInfoService.class);
+
 		
 		RestAdapter weekendPlannerAdapter =
     		new RestAdapter.Builder()
 				.setClient(new ExtendedTimeoutUrlConnectionClient())
+				.setLogLevel(LogLevel.FULL)
+				.setLog(new AndroidLog("MYREQUESTS"))
 				.setEndpoint("http://10.0.3.2:8080/WeekendPlanner/")
 				.build();
         
         mWeekendPlannerService = weekendPlannerAdapter.create(WeekendPlannerService.class);
         
-        mCityCodes = new HashMap<String, CityCode>();
+        mCities = new HashMap<String, City>();
         
 		return rootView;
 	}
@@ -131,7 +119,7 @@ public class PromptFragment extends Fragment
 	@Override
 	public void onStart() {
 		super.onStart();
-		new InvokeCityInfoServerTask().execute();
+		new CityInfoTask().execute();
 	}
 
 	@Override
@@ -145,7 +133,7 @@ public class PromptFragment extends Fragment
 			break;
 		case R.id.weekendize:
 			if(isValidInput())
-				new InvokeWeekendPlannerServerTask().execute();
+				new WeekendPlannerTask().execute();
 			break;
 		}
 	}
@@ -165,19 +153,8 @@ public class PromptFragment extends Fragment
 	}
 	
 	private boolean isValidInput() {
-		String curCity = mCurrentCityPrompt.getSelectedItem().toString();
-		String destCity = mDestinationCityPrompt.getSelectedItem().toString();
 		String budget = mBudgetPrompt.getText().toString();
-		
-		if (curCity.isEmpty() || curCity.equals(null)) {
-			showToast("Invalid Current City");
-			return false;
-		}
-		if (curCity.equalsIgnoreCase(destCity) 
-				&& mDestinationCityPrompt.getVisibility() != View.GONE) {
-			showToast("Plan it yourself!");
-			return false;
-		}
+	
 		try {
 			if(Double.valueOf(budget).equals(null)) {
 				showToast("Invalid Budget");
@@ -191,7 +168,7 @@ public class PromptFragment extends Fragment
 		return true;
 	}
     
-    private class InvokeWeekendPlannerServerTask
+    private class WeekendPlannerTask
     	extends AsyncTask<Void, Void, WeekendPlannerResponse> {
     	
     	@Override
@@ -202,7 +179,7 @@ public class PromptFragment extends Fragment
 
 		@Override
 		protected WeekendPlannerResponse doInBackground(Void... params) {
-			return mWeekendPlannerService.execute(buildRequest());
+			return mWeekendPlannerService.weekendize(buildRequest());
 		}
 		
 		@Override
@@ -214,27 +191,42 @@ public class PromptFragment extends Fragment
 		// assumes input has been verified
 		private WeekendPlannerRequest buildRequest() {
 			return new WeekendPlannerRequest(
-				mBudgetPrompt.getText().toString(),
-				mCityCodes.get(
-					mCurrentCityPrompt.getSelectedItem().toString()),
-				mDestinationCityPrompt.getVisibility() == View.GONE ?
-					null : 
-					mCityCodes.get(mDestinationCityPrompt
-										.getSelectedItem().toString()));
+				getBudget(),
+				getOrigin(),
+				getDestination());
+		}
+		
+		private String getBudget() {
+			return mBudgetPrompt.getText().toString();
+		}
+		
+		private City getOrigin() {
+			return mCities.get(
+				mCurrentCityPrompt.getSelectedItem().toString());
+		}
+		
+		private City getDestination() {
+			return mDestinationCityPrompt.getVisibility() == View.GONE ?
+				mCities.get(
+					mDestinationCityPrompt.getItemAtPosition(
+						new Random().nextInt(mCities.size())).toString())
+				: mCities.get(
+					mDestinationCityPrompt.getSelectedItem().toString());
 		}
     }
     
-    private class InvokeCityInfoServerTask
+    private class CityInfoTask
     	extends AsyncTask<Void, Void, CityInfoResponse> {
     	
     	private String mCountry;
     	private final String DEFAULT_COUNTRY = "US";
     	
-    	public InvokeCityInfoServerTask() {
+    	public CityInfoTask() {
     		mCountry = DEFAULT_COUNTRY;
     	}
      	
-    	public InvokeCityInfoServerTask(String country) {
+    	@SuppressWarnings("unused")
+		public CityInfoTask(String country) {
     		mCountry = country;
     	}
     	
@@ -246,29 +238,21 @@ public class PromptFragment extends Fragment
 
 		@Override
 		protected CityInfoResponse doInBackground(Void... params) {
-			AuthTokenResponse auth =
-				mCityInfoService.authorize(
-					"Basic " + AuthUtils.getCredential(),
-					"client_credentials");
-			
-			return mCityInfoService.execute(
-				"Bearer " + auth.access_token,
-				mCountry);
+			return mWeekendPlannerService.queryCities(mCountry);
 		}
 		
 		@Override
 		protected void onPostExecute(CityInfoResponse response) {
 			for(City city : response.Cities) {
-				mCityCodes.put(
-					city.name, 
-					new CityCode(city.code, city.Links.get(0).href));
+				mCities.put(city.name, city);
 			}
 			
 			ArrayAdapter<String> cityAdapter =
 				new ArrayAdapter<String>(
 					getActivity(),
 					android.R.layout.simple_spinner_item,
-					mCityCodes.keySet().toArray(new String[mCityCodes.size()]));
+					mCities.keySet().toArray(
+						new String[mCities.size()]));
 			cityAdapter.setDropDownViewResource(
 				android.R.layout.simple_spinner_dropdown_item);
 			

@@ -1,7 +1,7 @@
 package example.web.responses;
 
 public class AuthTokenResponse {
-
+	
 	public String access_token;
 	public String token_type;
 	public String expires_in;

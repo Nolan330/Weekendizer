@@ -1,4 +1,4 @@
-package example.web.responses;
+package example.web.model;
 
 import java.util.List;
 

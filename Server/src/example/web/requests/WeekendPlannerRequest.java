@@ -1,13 +1,14 @@
 package example.web.requests;
 
+import example.web.model.City;
+
 public class WeekendPlannerRequest {
 	
 	public String budget;
-	public CityCode currentCity;
-	public CityCode destinationCity;
+	public City currentCity;
+	public City destinationCity;
 	
-	public WeekendPlannerRequest(String b,
-			CityCode curCity, CityCode destCity) {
+	public WeekendPlannerRequest(String b, City curCity, City destCity) {
 		budget = b;
 		currentCity = curCity;
 		destinationCity = destCity;
@@ -15,9 +16,12 @@ public class WeekendPlannerRequest {
 	
 	public String toString() {
 		return "{budget: " + budget 
-				+ ", curCity: " + currentCity.code
+				+ ", curCity: "
+				+ currentCity.name + " (" + currentCity.code + ")"
 				+ ", destCity: "
-				+ (destinationCity == null ? "null" : destinationCity.code)
+				+ (destinationCity == null ? 
+					"null" :
+					destinationCity.name + " (" + destinationCity.code + ")")
 				+ "}";
 	}
 
