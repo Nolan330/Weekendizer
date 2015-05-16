@@ -83,12 +83,8 @@ public class WeekendPlannerServlet extends HttpServlet {
 			wOps::getFlight,
 			wOps.getExecutor())
 		.thenCombineAsync(
-			wOps.getEventAuthToken(),
-			wOps::getEvents,
-			wOps.getExecutor())
-		.thenCombineAsync(
 			wOps.getTicketAuthToken(),
-			wOps::filterEventsByTicketPrice,
+			wOps::getTickets,
 			wOps.getExecutor())
 		.thenCombineAsync(
 			wOps.getWeather(),
