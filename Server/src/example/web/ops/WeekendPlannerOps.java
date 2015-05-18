@@ -1,24 +1,21 @@
-package example.weekendplanner;
+package example.web.ops;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
-import java.util.function.Supplier;
 
-import retrofit.RestAdapter;
-import retrofit.RestAdapter.LogLevel;
-import retrofit.client.UrlConnectionClient;
 import example.web.model.City;
 import example.web.requests.WeekendPlannerRequest;
 import example.web.responses.CityInfoResponse;
-import example.web.services.FlightInfoService;
-import example.web.services.PlacesInfoService;
-import example.web.services.TicketInfoService;
-import example.web.services.WeatherInfoService;
-import example.web.utils.AuthUtils;
+import example.web.responses.FlightInfoResponse;
 
 public class WeekendPlannerOps {
 	
@@ -27,6 +24,10 @@ public class WeekendPlannerOps {
 	 */
 	private final int THREAD_COUNT = 8;
 	private final int NUM_TRIP_VARIANTS = 5;
+	private final String FLIGHT_ENDPOINT = "https://api.test.sabre.com/";
+	private final String TICKET_ENDPOINT = "https://api.stubhubsandbox.com/";
+	private final String WEATHER_ENDPOINT = "api.openweathermap.org/";
+	private final String PLACES_ENDPOINT = "placeholder.ignore.eu/";
 	
 	private Executor mExecutor;
 	
@@ -43,19 +44,12 @@ public class WeekendPlannerOps {
 	private List<TripVariant> mTripVariants;
 	
 	/**
-	 * Retrofit adapters for interacting with the various APIs
+	 * Helper classes for interacting with the various APIs
 	 */
-	private final String mFlightInfoEndpoint = "https://api.test.sabre.com/";
-	private FlightInfoService mFlightInfoService;
-	
-	private final String mTicketInfoEndpoint = "https://api.stubhubsandbox.com/";
-	private TicketInfoService mTicketInfoService;
-	
-	private final String mWeatherInfoEndpoint = "api.openweathermap.org/";
-	private WeatherInfoService mWeatherInfoService;
-	
-	private final String mPlacesInfoEndpoint = "placeholder.ignore.eu"; 
-	private PlacesInfoService mPlacesInfoService;
+	private FlightOps mFlightOps;
+	private TicketOps mTicketOps;
+	private WeatherOps mWeatherOps;
+	private PlacesOps mPlacesOps;
 	
 	public WeekendPlannerOps() {
 		init(null, makeDefaultExecutor(THREAD_COUNT));
@@ -83,27 +77,11 @@ public class WeekendPlannerOps {
 		}
 		
 		mTripVariants = new ArrayList<TripVariant>(NUM_TRIP_VARIANTS);
-
-		mFlightInfoService = makeService(
-			mFlightInfoEndpoint, FlightInfoService.class);
 		
-		mTicketInfoService = makeService(
-			mTicketInfoEndpoint, TicketInfoService.class);
-		
-		mWeatherInfoService = makeService(
-			mWeatherInfoEndpoint, WeatherInfoService.class);
-		
-		mPlacesInfoService = makeService(
-			mPlacesInfoEndpoint, PlacesInfoService.class);
-	}
-	
-	private <T> T makeService(String endpoint, Class<T> serviceClass) {
-		return new RestAdapter.Builder()
-			.setClient(new UrlConnectionClient())
-			.setEndpoint(endpoint)
-			.setLogLevel(LogLevel.FULL)
-			.build()
-			.create(serviceClass);
+		mFlightOps = new FlightOps(FLIGHT_ENDPOINT);
+		mTicketOps = new TicketOps(TICKET_ENDPOINT);
+		mWeatherOps = new WeatherOps(WEATHER_ENDPOINT);
+		mPlacesOps = new PlacesOps(PLACES_ENDPOINT);
 	}
 	
 	public Executor getExecutor() {
@@ -125,45 +103,40 @@ public class WeekendPlannerOps {
 	
 	public CompletableFuture<String> getFlightAuthToken() {
 		return CompletableFuture.supplyAsync(
-			() -> mFlightInfoService.authorize(
-				AuthUtils.getFlightCredential(),
-				AuthUtils.getFlightGrantType()).access_token,
-			getExecutor());
-	}
-	
-	@SuppressWarnings("unused")
-	private <T> CompletableFuture<T> supplyCompletableFuture(Supplier<T> supplier) {
-		return CompletableFuture.supplyAsync(
-			supplier,
+			() -> mFlightOps.authorize(),
 			getExecutor());
 	}
 	
 	public CompletableFuture<String> getTicketAuthToken() {
 		return CompletableFuture.supplyAsync(
-			() -> mTicketInfoService.authorize(
-				AuthUtils.getTicketCredential(),
-				AuthUtils.getTicketGrantType(),
-				AuthUtils.getTicketUsername(),
-				AuthUtils.getTicketPassword(),
-				AuthUtils.getTicketScope()).access_token,
+			() -> mTicketOps.authorize(),
 			getExecutor());
 	}
 	
 	public CompletableFuture<CityInfoResponse> getCities(
 			String authToken, String country) {
 		return CompletableFuture.supplyAsync(
-			() -> mFlightInfoService.queryCities(
-				"Bearer " + authToken,
-				country),
+			() -> mFlightOps.getCities(authToken, country),
 			getExecutor());
 	}
 
-	public CompletableFuture<List<TripVariant>> getFlight(String authToken) {
-		// check if cur/dest is same ("find things to do")
+	public CompletableFuture<FlightInfoResponse> getFlight(String authToken) {
+		return CompletableFuture.supplyAsync(
+			() -> mFlightOps.getFlight(
+				authToken,
+				mCurrentCity.code,
+				mDestinationCity.code,
+				getFormattedDate(DayOfWeek.FRIDAY),
+				getFormattedDate(DayOfWeek.SUNDAY),
+				String.valueOf(mBudget)),
+			getExecutor());
 		// then don't make query just set remaining = budget;
 		// otherwise make API request to get list of flights
 		// create/update remainingBudget vector?
 		// or like weekend vector .setRemainingBudget() values
+	}
+	
+	public CompletableFuture<List<TripVariant>> updateTrip(FlightInfoResponse flightInfoResponse) {
 		return null;
 	}
 	
@@ -181,6 +154,13 @@ public class WeekendPlannerOps {
 			CompletableFuture<List<TripVariant>> tripVariants,
 			Weather weather) {
 		return null;
+	}
+	
+	private String getFormattedDate(DayOfWeek day) {
+		LocalDate today = LocalDate.now();
+		return (today.getDayOfWeek() == day && day == DayOfWeek.FRIDAY ?
+				today : today.with(TemporalAdjusters.next(day)))
+			.format(DateTimeFormatter.ISO_LOCAL_DATE);
 	}
 	
 	public class Weather {}

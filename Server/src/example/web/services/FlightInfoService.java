@@ -30,11 +30,9 @@ public interface FlightInfoService {
 		 @Query("destination") String destination,
 		 @Query("departuredate") String departureDate,
 		 @Query("returndate") String returnDate,
+		 @Query("maxfare") String maxFare,
 		 @Query("outbounddeparturewindow") String departureWindow,
 		 @Query("inboundarrivalwindow") String returnWindow,
-		 @Query("maxfare") String maxFare,
-		 @Query("limit") String limitResponses,
-		 @Query("order2") String secondaryOrder,
-		 @Query("sortby2") String secondarySort);
+		 @Query("limit") String limitResponses);
 									
 }

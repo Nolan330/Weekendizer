@@ -12,7 +12,9 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.google.gson.Gson;
 
+import example.web.ops.WeekendPlannerOps;
 import example.web.requests.WeekendPlannerRequest;
+import example.web.responses.FlightInfoResponse;
 
 /**
  * Servlet implementation class WeekendPlannerServlet
@@ -78,22 +80,27 @@ public class WeekendPlannerServlet extends HttpServlet {
 		WeekendPlannerOps wOps = new WeekendPlannerOps(req);
 		
 		// initiate the monad by retrieving an auth token
-		wOps.getFlightAuthToken()
+		FlightInfoResponse fresp = wOps.getFlightAuthToken()
 		.thenComposeAsync(
 			wOps::getFlight,
-			wOps.getExecutor())
-		.thenCombineAsync(
-			wOps.getTicketAuthToken(),
-			wOps::getTickets,
-			wOps.getExecutor())
-		.thenCombineAsync(
-			wOps.getWeather(),
-			wOps::fillWeekend,
-			wOps.getExecutor())
-		.thenAcceptAsync(
-			tripVariants -> sendResponse(response, tripVariants),
-			wOps.getExecutor())
-		.join();
+			wOps.getExecutor()).join();
+		
+		System.out.println(fresp);
+//		.thenComposeAsync(
+//			wOps::updateTripVariants,
+//			wOps.getExecutor()).join();
+//		.thenCombineAsync(
+//			wOps.getTicketAuthToken(),
+//			wOps::getTickets,
+//			wOps.getExecutor()).join();
+//		.thenCombineAsync(
+//			wOps.getWeather(),
+//			wOps::fillWeekend,
+//			wOps.getExecutor())
+//		.thenAcceptAsync(
+//			tripVariants -> sendResponse(response, tripVariants),
+//			wOps.getExecutor())
+//		.join();
 	}
 	
 	// if toJson needs a ".class" second parameter, could maybe use an object wrapper that calls this.class?
