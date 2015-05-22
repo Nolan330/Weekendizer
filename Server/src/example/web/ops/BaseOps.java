@@ -1,13 +1,11 @@
 package example.web.ops;
 
-import java.io.IOException;
-import java.net.HttpURLConnection;
-
+import example.web.responses.OAuth2TokenResponse;
 import example.web.utils.NoAuthUtils;
 import example.web.utils.BaseOAuth2Utils;
 import retrofit.RestAdapter;
 import retrofit.RestAdapter.LogLevel;
-import retrofit.client.Request;
+import retrofit.client.OkClient;
 import retrofit.client.UrlConnectionClient;
 
 public abstract class BaseOps<T> {
@@ -36,8 +34,11 @@ public abstract class BaseOps<T> {
 		return mEndpoint;
 	}
 	
-	// TODO: deal with API-specific token refreshing
-	public abstract String authorize();
+	public String getAuthToken() {
+		return mAuthUtils.makeBearerToken(authorize().getAccessToken());
+	}
+	
+	protected abstract OAuth2TokenResponse authorize();
 	
 	public BaseOAuth2Utils getAuthUtils() {
 		return mAuthUtils;

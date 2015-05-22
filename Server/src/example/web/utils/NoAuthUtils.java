@@ -6,6 +6,7 @@ public class NoAuthUtils extends BaseOAuth2Utils {
 	{
 		mClientKey = null;
 		mClientSecret = null;
+		mApplicationToken = null;
 		mIsPreEncoded = null;
 		mGrantType = null;
 		mUsername = null;

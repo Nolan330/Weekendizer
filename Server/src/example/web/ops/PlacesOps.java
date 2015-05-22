@@ -1,5 +1,6 @@
 package example.web.ops;
 
+import example.web.responses.OAuth2TokenResponse;
 import example.web.services.PlacesInfoService;
 import example.web.utils.PlacesAuthUtils;
 
@@ -10,7 +11,7 @@ public class PlacesOps extends BaseOps<PlacesInfoService> {
 	}
 
 	@Override
-	public String authorize() {
+	protected OAuth2TokenResponse authorize() {
 		// TODO Auto-generated method stub
 		return null;
 	}

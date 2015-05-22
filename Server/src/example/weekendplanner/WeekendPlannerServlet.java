@@ -56,7 +56,7 @@ public class WeekendPlannerServlet extends HttpServlet {
 		
 		wOps.getFlightAuthToken()
 		.thenComposeAsync(
-			authToken -> wOps.getCities(authToken, country),
+			authToken -> wOps.getCities(country, authToken),
 			wOps.getExecutor())
 		.thenAcceptAsync(
 			cities -> sendResponse(response, cities),
@@ -76,23 +76,19 @@ public class WeekendPlannerServlet extends HttpServlet {
 		
 		System.out.println(req.toString());
 		
-		// new ops for each request (concurrent requests)
 		WeekendPlannerOps wOps = new WeekendPlannerOps(req);
 		
-		// initiate the monad by retrieving an auth token
-		FlightInfoResponse fresp = wOps.getFlightAuthToken()
-		.thenComposeAsync(
+		wOps.initTrip()
+		.thenCombineAsync(
+			wOps.getFlightAuthToken(),
 			wOps::getFlight,
-			wOps.getExecutor()).join();
-		
-		System.out.println(fresp);
-//		.thenComposeAsync(
-//			wOps::updateTripVariants,
-//			wOps.getExecutor()).join();
-//		.thenCombineAsync(
-//			wOps.getTicketAuthToken(),
-//			wOps::getTickets,
-//			wOps.getExecutor()).join();
+			wOps.getExecutor())
+		.thenCompose(trip ->
+			trip.thenCombineAsync(
+				wOps.getTicketAuthToken(),
+				wOps::getTickets,
+				wOps.getExecutor()))
+	//	.thenCompose(flatmap -> flatmap)
 //		.thenCombineAsync(
 //			wOps.getWeather(),
 //			wOps::fillWeekend,
@@ -100,7 +96,7 @@ public class WeekendPlannerServlet extends HttpServlet {
 //		.thenAcceptAsync(
 //			tripVariants -> sendResponse(response, tripVariants),
 //			wOps.getExecutor())
-//		.join();
+		.join();
 	}
 	
 	// if toJson needs a ".class" second parameter, could maybe use an object wrapper that calls this.class?

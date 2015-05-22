@@ -1,5 +1,6 @@
 package example.web.ops;
 
+import example.web.responses.OAuth2TokenResponse;
 import example.web.services.WeatherInfoService;
 
 public class WeatherOps extends BaseOps<WeatherInfoService> {
@@ -9,7 +10,7 @@ public class WeatherOps extends BaseOps<WeatherInfoService> {
 	}
 
 	@Override
-	public String authorize() {
+	protected OAuth2TokenResponse authorize() {
 		// no-op for non-authorized APIs
 		return null;
 	}

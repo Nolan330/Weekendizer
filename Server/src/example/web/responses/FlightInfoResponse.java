@@ -1,31 +1,54 @@
 package example.web.responses;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 
 import example.web.model.Flight;
-import example.web.model.Link;
 
 public class FlightInfoResponse {
 
-	public List<Flight> PricedItineraries;
-	public String ReturnDateTime;
-	public String DepartureDateTime;
-	public String DestinationLocation;
-	public String OriginLocation;
-	public List<Link> Links;
- 	
-	public FlightInfoResponse(List<Flight> pricedItineraries,
-			String returnDateTime, String departureDateTime,
-			String destinationLocation, String originLocation,
-			List<Link> links) {
-		PricedItineraries = pricedItineraries;
+	private List<Flight> PricedItineraries;
+	private String ReturnDateTime;
+	private String DepartureDateTime;
+	private String DestinationLocation;
+	private String OriginLocation;
+	
+	public FlightInfoResponse(String returnDateTime,
+			String departureDateTime, String destinationLocation,
+			String originLocation) {
+		PricedItineraries = Arrays.asList(new Flight());
 		ReturnDateTime = returnDateTime;
 		DepartureDateTime = departureDateTime;
 		DestinationLocation = destinationLocation;
 		OriginLocation = originLocation;
-		Links = links;
 	}
 	
+	public Double getFare() {
+		return getFlight().getFare();
+	}
+	
+	public LocalDate getDepartureDate() {
+		return LocalDate.parse(DepartureDateTime);
+	}
+	
+	public LocalDateTime getDepartureDateTime() {
+		return LocalDateTime.parse(PricedItineraries.get(0).getDeparutureDateTime());
+	}
+
+	public LocalDate getReturnDate() {
+		return LocalDate.parse(PricedItineraries.get(0).getReturnDateTime());
+	}
+	
+	public LocalDateTime getReturnDateTime() {
+		return LocalDateTime.parse(ReturnDateTime);
+	}
+
+	public Flight getFlight() {
+		return PricedItineraries.get(0);
+	}
+
 	public String toString() {
 		String flightItin = "";
 		for(Flight f : PricedItineraries) {

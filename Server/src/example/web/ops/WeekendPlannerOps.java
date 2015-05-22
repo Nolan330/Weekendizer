@@ -1,11 +1,7 @@
 package example.web.ops;
 
 import java.time.DayOfWeek;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.TemporalAdjusters;
-import java.util.ArrayList;
-import java.util.Date;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -15,7 +11,8 @@ import java.util.concurrent.ThreadFactory;
 import example.web.model.City;
 import example.web.requests.WeekendPlannerRequest;
 import example.web.responses.CityInfoResponse;
-import example.web.responses.FlightInfoResponse;
+import example.web.responses.WeekendPlannerResponse;
+import example.web.utils.DateUtils;
 
 public class WeekendPlannerOps {
 	
@@ -29,6 +26,9 @@ public class WeekendPlannerOps {
 	private final String WEATHER_ENDPOINT = "api.openweathermap.org/";
 	private final String PLACES_ENDPOINT = "placeholder.ignore.eu/";
 	
+	/**
+	 * The executor responsible for scheduling threads
+	 */
 	private Executor mExecutor;
 	
 	/**
@@ -37,11 +37,6 @@ public class WeekendPlannerOps {
 	private City mCurrentCity;
 	private City mDestinationCity;
 	private Double mBudget;
-	
-	/**
-	 * State used in trip calculations
-	 */
-	private List<TripVariant> mTripVariants;
 	
 	/**
 	 * Helper classes for interacting with the various APIs
@@ -76,8 +71,6 @@ public class WeekendPlannerOps {
 			mBudget = Double.valueOf(req.budget);
 		}
 		
-		mTripVariants = new ArrayList<TripVariant>(NUM_TRIP_VARIANTS);
-		
 		mFlightOps = new FlightOps(FLIGHT_ENDPOINT);
 		mTicketOps = new TicketOps(TICKET_ENDPOINT);
 		mWeatherOps = new WeatherOps(WEATHER_ENDPOINT);
@@ -101,76 +94,78 @@ public class WeekendPlannerOps {
 			});
 	}
 	
-	public CompletableFuture<String> getFlightAuthToken() {
-		return CompletableFuture.supplyAsync(
-			() -> mFlightOps.authorize(),
-			getExecutor());
+	public CompletableFuture<WeekendPlannerResponse> initTrip() {
+		return CompletableFuture.completedFuture(
+			new WeekendPlannerResponse(mBudget, NUM_TRIP_VARIANTS));
 	}
 	
-	public CompletableFuture<String> getTicketAuthToken() {
+	public CompletableFuture<String> getFlightAuthToken() {
 		return CompletableFuture.supplyAsync(
-			() -> mTicketOps.authorize(),
+			() -> mFlightOps.getAuthToken(),
 			getExecutor());
 	}
 	
 	public CompletableFuture<CityInfoResponse> getCities(
-			String authToken, String country) {
+			String country, String authToken) {
 		return CompletableFuture.supplyAsync(
 			() -> mFlightOps.getCities(authToken, country),
 			getExecutor());
 	}
 
-	public CompletableFuture<FlightInfoResponse> getFlight(String authToken) {
+	public CompletableFuture<WeekendPlannerResponse> getFlight(
+			WeekendPlannerResponse tripVariants, String authToken) {
 		return CompletableFuture.supplyAsync(
-			() -> mFlightOps.getFlight(
-				authToken,
-				mCurrentCity.code,
-				mDestinationCity.code,
-				getFormattedDate(DayOfWeek.FRIDAY),
-				getFormattedDate(DayOfWeek.SUNDAY),
-				String.valueOf(mBudget)),
+				() -> mFlightOps.getFlight(
+					authToken,
+					mCurrentCity.code,
+					mDestinationCity.code,
+					DateUtils.getFormattedDateOfNext(DayOfWeek.FRIDAY),
+					DateUtils.getFormattedDateOfNext(DayOfWeek.SUNDAY),
+					String.valueOf(tripVariants.getInitialBudget())),
+				getExecutor())
+			// Compare to .thenCompose(tripVariants::update));
+			.thenApply(tripVariants::update);
+	}
+	
+	public CompletableFuture<String> getTicketAuthToken() {
+		return CompletableFuture.supplyAsync(
+			() -> mTicketOps.getAuthToken(),
 			getExecutor());
-		// then don't make query just set remaining = budget;
-		// otherwise make API request to get list of flights
-		// create/update remainingBudget vector?
-		// or like weekend vector .setRemainingBudget() values
 	}
 	
-	public CompletableFuture<List<TripVariant>> updateTrip(FlightInfoResponse flightInfoResponse) {
-		return null;
+	public CompletableFuture<WeekendPlannerResponse> getTickets(
+			WeekendPlannerResponse tripVariants, String authToken) {
+		Arrays.asList(DayOfWeek.FRIDAY, DayOfWeek.SATURDAY, DayOfWeek.SUNDAY);
+		return getTicketsForDay(DayOfWeek.FRIDAY, tripVariants, authToken)
+			.thenCompose(variants ->
+				getTicketsForDay(DayOfWeek.SATURDAY, variants, authToken))
+			.thenCompose(variants ->
+				getTicketsForDay(DayOfWeek.SUNDAY, variants, authToken));
 	}
 	
-	public CompletableFuture<List<TripVariant>> getTickets(
-			List<TripVariant> tripVariants,
+	private CompletableFuture<WeekendPlannerResponse> getTicketsForDay(
+			DayOfWeek day, WeekendPlannerResponse tripVariants,
 			String authToken) {
-		return null;
+		return CompletableFuture.supplyAsync(
+				() -> mTicketOps.getTickets(
+					authToken,
+					DateUtils.makeDateTimeRange(day, tripVariants.getFlight()),
+					mDestinationCity.name,
+					String.valueOf(tripVariants.getBudgetAfterFlight())),
+				getExecutor())
+			.thenApply(tripVariants::update);
 	}
 	
 	public CompletableFuture<Weather> getWeather() {
 		return null;
 	}
 	
-	public CompletableFuture<List<TripVariant>> fillWeekend(
-			CompletableFuture<List<TripVariant>> tripVariants,
-			Weather weather) {
+	public CompletableFuture<List<WeekendPlannerResponse>> fillWeekend(
+			WeekendPlannerResponse tripVariants, Weather weather) {
 		return null;
 	}
-	
-	private String getFormattedDate(DayOfWeek day) {
-		LocalDate today = LocalDate.now();
-		return (today.getDayOfWeek() == day && day == DayOfWeek.FRIDAY ?
-				today : today.with(TemporalAdjusters.next(day)))
-			.format(DateTimeFormatter.ISO_LOCAL_DATE);
-	}
-	
+
 	public class Weather {}
 	public class Event {}
-	public class TripVariant {
-		//departure
-		//return
-		//price
-		//list of events in order by time
-		//remainingBudget - "iceCream"
-	}
 
 }
