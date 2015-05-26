@@ -2,55 +2,104 @@ package example.web.model;
 
 import java.util.List;
 
-public class Flight {
+import com.google.gson.annotations.SerializedName;
 
-	private AirItinerary AirItinerary;
-	private AirItineraryPricingInfo AirItineraryPricingInfo;
+public class Flight {
+	
+	/**
+	 * Member variables from serialization
+	 */
+	@SerializedName("AirItinerary")
+	private AirItinerary mAirItinerary;
+	
+	@SerializedName("AirItineraryPricingInfo")
+	private AirItineraryPricingInfo mAirItineraryPricingInfo;
 	
 	public Double getFare() {
-		return AirItineraryPricingInfo.ItinTotalFare.TotalFare.getAmount();
+		return mAirItineraryPricingInfo.getFare();
 	}
 	
-	public String getDeparutureDateTime() {
-		return AirItinerary
-				.OriginDestinationOptions
-				.OriginDestinationOption.get(0)
-				.FlightSegment.get(0)
-				.DepartureDateTime;
+	public String getCurrencyCode() {
+		return mAirItineraryPricingInfo.getCurrencyCode();
 	}
 	
-	public String getReturnDateTime() {
-		return AirItinerary
-				.OriginDestinationOptions
-				.OriginDestinationOption.get(AirItinerary.OriginDestinationOptions.OriginDestinationOption.size() - 1)
-				.FlightSegment.get(AirItinerary
-						.OriginDestinationOptions
-						.OriginDestinationOption.get(AirItinerary.OriginDestinationOptions.OriginDestinationOption.size() - 1).FlightSegment.size() - 1)
-				.DepartureDateTime;
+	public String getDepartingDepartureDateTime() {
+		return mAirItinerary.getDepartingDepartureDateTime();
+	}
+	
+	public String getDepartingArrivalDateTime() {
+		return mAirItinerary.getDepartingArrivalDateTime();
+	}
+	
+	public String getReturningDepartureDateTime() {
+		return mAirItinerary.getReturningDepartureDateTime();
+	}
+	
+	public String getReturningArrivalDateTime() {
+		return mAirItinerary.getReturningArrivalDateTime();
 	}
 	
 	public String toString() {
-		return this.AirItinerary.toString()
-				+ "costing " + this.AirItineraryPricingInfo.toString();
+		return mAirItinerary + "\n\tcosting " + mAirItineraryPricingInfo;
 	}
 	
 	private class AirItinerary {
 		
-		private OriginDestinationOptions OriginDestinationOptions;
+		@SerializedName("OriginDestinationOptions")
+		private OriginDestinationOptions mOriginDestinationOptions;
+		
+		public String getDepartingDepartureDateTime() {
+			return mOriginDestinationOptions.getDepartingDepartureDateTime();
+		}
+		
+		public String getDepartingArrivalDateTime() {
+			return mOriginDestinationOptions.getDepartingArrivalDateTime();
+		}
+		
+		public String getReturningDepartureDateTime() {
+			return mOriginDestinationOptions.getReturningDepartureDateTime();
+		}
+		
+		public String getReturningArrivalDateTime() {
+			return mOriginDestinationOptions.getReturningArrivalDateTime();
+		}
 	
 		public String toString() {
-			return this.OriginDestinationOptions.toString();
+			return mOriginDestinationOptions.toString();
 		}
 	}
 	
 	private class OriginDestinationOptions {
 		
-		private List<FlightSegment> OriginDestinationOption;
+		@SerializedName("OriginDestinationOption")
+		private List<FlightSegment> mOriginDestinationOption;
+		
+		public String getDepartingDepartureDateTime() {
+			return mOriginDestinationOption.get(0)
+				.getDepartingDepartureDateTime();
+		}
+		
+		public String getDepartingArrivalDateTime() {
+			return mOriginDestinationOption.get(0)
+				.getDepartingArrivalDateTime();
+		}
+		
+		public String getReturningDepartureDateTime() {
+			return mOriginDestinationOption.get(
+					mOriginDestinationOption.size() - 1)
+				.getReturningDepartureDateTime();
+		}
+		
+		public String getReturningArrivalDateTime() {
+			return mOriginDestinationOption.get(
+					mOriginDestinationOption.size() - 1)
+				.getReturningArrivalDateTime();
+		}
 		
 		public String toString() {
 			String options = "";
-			for(FlightSegment f : OriginDestinationOption) {
-				options += f.toString() + ",\n";
+			for(FlightSegment f : mOriginDestinationOption) {
+				options += "\n" + f + ",";
 			}
 			return options;
 		}
@@ -58,86 +107,155 @@ public class Flight {
 	
 	private class FlightSegment {
 		
-		private List<Segment> FlightSegment;
-		private Integer ElapsedTime;
+		@SerializedName("FlightSegment")
+		private List<Segment> mFlightSegment;
+		
+		@SerializedName("ElapsedTime")
+		private Integer mElapsedTime;
+		
+		public String getDepartingDepartureDateTime() {
+			return mFlightSegment.get(0).getDepartureDateTime();
+		}
+		
+		public String getDepartingArrivalDateTime() {
+			return mFlightSegment.get(0).getArrivalDateTime();
+		}
+		
+		public String getReturningDepartureDateTime() {
+			return mFlightSegment.get(
+				mFlightSegment.size() - 1).getDepartureDateTime();
+		}
+		
+		public String getReturningArrivalDateTime() {
+			return mFlightSegment.get(
+				mFlightSegment.size() - 1).getArrivalDateTime();
+		}
 		
 		public String toString() {
 			String segments = "";
-			for(Segment s : FlightSegment) {
+			for(Segment s : mFlightSegment) {
 				segments += s.toString() + ", ";
 			}
-			return "\t[" + segments + "] taking " + ElapsedTime + " minutes";
+			return "\t[" + segments + "] taking " + mElapsedTime + " minutes";
 		}
 	}
 	
 	private class Segment {
 		
-		private Airport DepartureAirport;
-		private Airport ArrivalAirport;
-		private Integer ElapsedTime;
-		private String DepartureDateTime;
-		private String ArrivalDateTime;
-		private Integer FlightNumber;
-		private Airline OperatingAirline;
+		@SerializedName("DepartureAirport")
+		private Airport mDepartureAirport;
+		
+		@SerializedName("ArrivalAirport")
+		private Airport mArrivalAirport;
+		
+		@SerializedName("ElapsedTime")
+		private Integer mElapsedTime;
+		
+		@SerializedName("DepartureDateTime")
+		private String mDepartureDateTime;
+		
+		@SerializedName("ArrivalDateTime")
+		private String mArrivalDateTime;
+		
+		@SerializedName("FlightNumber")
+		private Integer mFlightNumber;
+		
+		@SerializedName("OperatingAirline")
+		private Airline mOperatingAirline;
+		
+		public String getArrivalDateTime() {
+			return mArrivalDateTime;
+		}
+		
+		public String getDepartureDateTime() {
+			return mDepartureDateTime;
+		}
 		
 		public String toString() {
-			return DepartureAirport.toString()
-					+ " on " + DepartureDateTime + " to "
-					+ ArrivalAirport.toString()
-					+ " on " + ArrivalDateTime
-					+ " (" + ElapsedTime + " minutes)"
-					+ " via flight #" + FlightNumber
-					+ " with " + OperatingAirline.toString();
+			return mDepartureAirport.toString()
+					+ " on " + mDepartureDateTime + " to "
+					+ mArrivalAirport.toString()
+					+ " on " + mArrivalDateTime
+					+ " (" + mElapsedTime + " minutes)"
+					+ " via flight #" + mFlightNumber
+					+ " with " + mOperatingAirline.toString();
 		}
 	}
 	
 	private class Airport {
 		
-		private String LocationCode;
+		@SerializedName("LocationCode")
+		private String mLocationCode;
 		
 		public String toString() { 
-			return LocationCode;
+			return mLocationCode;
 		}
 	}
 	
 	private class Airline {
 		
-		private String Code;
+		@SerializedName("Code")
+		private String mCode;
 		
 		public String toString() {
-			return Code;
+			return mCode;
 		}
 	}
 	
 	private class AirItineraryPricingInfo {
 		
-		private ItinTotalFare ItinTotalFare;
+		@SerializedName("ItinTotalFare")
+		private ItinTotalFare mItinTotalFare;
+		
+		public Double getFare() {
+			return mItinTotalFare.getFare();
+		}
+		
+		public String getCurrencyCode() {
+			return mItinTotalFare.getCurrencyCode();
+		}
 		
 		public String toString() {
-			return ItinTotalFare.toString();
+			return mItinTotalFare.toString();
 		}
 	}
 	
 	private class ItinTotalFare {
 		
-		private Fare TotalFare;
+		@SerializedName("TotalFare")
+		private Fare mTotalFare;
+		
+		public Double getFare() {
+			return mTotalFare.getAmount();
+		}
+		
+		public String getCurrencyCode() {
+			return mTotalFare.getCurrencyCode();
+		}
 		
 		public String toString() {
-			return TotalFare.toString();
+			return mTotalFare.toString();
 		}
 	}
 	
 	private class Fare {
 		
-		private String CurrencyCode;
-		private String Amount;
+		@SerializedName("Amount")
+		private String mAmount;
 		
-		public String toString() {
-			return "$" + Amount + " (" + CurrencyCode + ")";
-		}
+		@SerializedName("CurrencyCode")
+		private String mCurrencyCode;
 		
 		public Double getAmount() {
-			return Double.valueOf(Amount);
+			return Double.valueOf(mAmount);
+		}
+		
+		public String getCurrencyCode() {
+			return mCurrencyCode;
+		}
+		
+		public String toString() {
+			return "$" + mAmount + " (" + mCurrencyCode + ")";
 		}
 	}
 	

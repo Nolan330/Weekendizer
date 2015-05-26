@@ -1,27 +1,40 @@
 package example.web.requests;
 
+import com.google.gson.annotations.SerializedName;
+
 import example.web.model.City;
 
 public class WeekendPlannerRequest {
 	
-	public String budget;
-	public City currentCity;
-	public City destinationCity;
+	@SerializedName("budget")
+	private String mBudget;
 	
-	public WeekendPlannerRequest(String b, City curCity, City destCity) {
-		budget = b;
-		currentCity = curCity;
-		destinationCity = destCity;
+	@SerializedName("currentCity")
+	private City mOriginCity;
+	
+	@SerializedName("destinationCity")
+	private City mDestinationCity;
+	
+	public Double getBudget() {
+		return Double.valueOf(mBudget);
+	}
+	
+	public City getOriginCity() {
+		return mOriginCity;
+	}
+	
+	public City getDestinationCity() {
+		return mDestinationCity;
 	}
 	
 	public String toString() {
-		return "{budget: " + budget 
+		return "{budget: " + mBudget 
 				+ ", curCity: "
-				+ currentCity.name + " (" + currentCity.code + ")"
+				+ mOriginCity.getName() + " (" + mOriginCity.getCode() + ")"
 				+ ", destCity: "
-				+ (destinationCity == null ? 
+				+ (mDestinationCity == null ? 
 					"null" :
-					destinationCity.name + " (" + destinationCity.code + ")")
+					mDestinationCity.getName() + " (" + mDestinationCity.getCode() + ")")
 				+ "}";
 	}
 

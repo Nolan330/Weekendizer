@@ -9,12 +9,13 @@ import example.web.utils.TicketAuthUtils;
 public class TicketOps extends BaseOps<TicketInfoService> {
 	
 	/**
-	 * Default values
+	 * Default ticket parameters
 	 */
 	private final String MIN_AVAILABLE = "1";
-	private final String FIELD_LIST = "";
-	private final String SORT = "";
-	private final String LIMIT = "10";
+	private final String FIELD_LIST =
+		"title, dateLocal, ticketInfo, venue, categories, groupings";
+	private final String SORT = "dateLocal asc, minPrice desc";
+	private final String LIMIT = "500";
 	
 	public TicketOps(String endpoint) {
 		super(endpoint, TicketInfoService.class, new TicketAuthUtils());
@@ -28,7 +29,6 @@ public class TicketOps extends BaseOps<TicketInfoService> {
 	
 	public TicketInfoResponse getTickets(String authToken,
 			String dateTimeRange, String city, String maxPrice) {
-		System.out.println("in TicketOps::getTickets");
 		return mService.queryTickets(
 			authToken,
 			dateTimeRange,

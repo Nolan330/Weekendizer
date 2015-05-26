@@ -5,24 +5,35 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
+import com.google.gson.annotations.SerializedName;
+
 import example.web.model.Flight;
 
 public class FlightInfoResponse {
 
-	private List<Flight> PricedItineraries;
-	private String ReturnDateTime;
-	private String DepartureDateTime;
-	private String DestinationLocation;
-	private String OriginLocation;
+	@SerializedName("PricedItineraries")
+	private List<Flight> mPricedItineraries;
+	
+	@SerializedName("ReturnDateTime")
+	private String mReturnDateTime;
+	
+	@SerializedName("DepartureDateTime")
+	private String mDepartureDateTime;
+	
+	@SerializedName("DestinationLocation")
+	private String mDestinationLocation;
+	
+	@SerializedName("OriginLocation")
+	private String mOriginLocation;
 	
 	public FlightInfoResponse(String returnDateTime,
 			String departureDateTime, String destinationLocation,
 			String originLocation) {
-		PricedItineraries = Arrays.asList(new Flight());
-		ReturnDateTime = returnDateTime;
-		DepartureDateTime = departureDateTime;
-		DestinationLocation = destinationLocation;
-		OriginLocation = originLocation;
+		mPricedItineraries = Arrays.asList(new Flight());
+		mReturnDateTime = returnDateTime;
+		mDepartureDateTime = departureDateTime;
+		mDestinationLocation = destinationLocation;
+		mOriginLocation = originLocation;
 	}
 	
 	public Double getFare() {
@@ -30,34 +41,46 @@ public class FlightInfoResponse {
 	}
 	
 	public LocalDate getDepartureDate() {
-		return LocalDate.parse(DepartureDateTime);
+		return LocalDate.parse(mDepartureDateTime);
 	}
 	
-	public LocalDateTime getDepartureDateTime() {
-		return LocalDateTime.parse(PricedItineraries.get(0).getDeparutureDateTime());
+	public LocalDateTime getDepartingDepartureDateTime() {
+		return LocalDateTime.parse(
+			mPricedItineraries.get(0).getDepartingDepartureDateTime());
+	}
+	
+	public LocalDateTime getDepartingArrivalDateTime() {
+		return LocalDateTime.parse(
+			mPricedItineraries.get(0).getDepartingArrivalDateTime());
 	}
 
 	public LocalDate getReturnDate() {
-		return LocalDate.parse(PricedItineraries.get(0).getReturnDateTime());
+		return LocalDate.parse(mReturnDateTime);
 	}
 	
-	public LocalDateTime getReturnDateTime() {
-		return LocalDateTime.parse(ReturnDateTime);
+	public LocalDateTime getReturningDepartureDateTime() {
+		return LocalDateTime.parse(
+			mPricedItineraries.get(0).getReturningDepartureDateTime());
+	}
+	
+	public LocalDateTime getReturningArrivalDateTime() {
+		return LocalDateTime.parse(
+			mPricedItineraries.get(0).getReturningArrivalDateTime());
 	}
 
 	public Flight getFlight() {
-		return PricedItineraries.get(0);
+		return mPricedItineraries.get(0);
 	}
 
 	public String toString() {
 		String flightItin = "";
-		for(Flight f : PricedItineraries) {
+		for(Flight f : mPricedItineraries) {
 			flightItin += "\n" + f.toString();
 		}
-		return "Depart from " + OriginLocation
-				+ " on " + DepartureDateTime
-				+ "\nto " + DestinationLocation
-				+ ", returing on " + ReturnDateTime 
+		return "Depart from " + mOriginLocation
+				+ " on " + mDepartureDateTime
+				+ "\nto " + mDestinationLocation
+				+ ", returing on " + mReturnDateTime 
 				+ " by " + flightItin;
 	}
 	

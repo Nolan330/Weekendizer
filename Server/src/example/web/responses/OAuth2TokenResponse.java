@@ -1,17 +1,30 @@
 package example.web.responses;
 
+import com.google.gson.annotations.SerializedName;
+
 public class OAuth2TokenResponse {
 	
-	private String access_token;
-	private String token_type;
-	private String expires_in;
+	@SerializedName("access_token")
+	private String mAccessToken;
+	
+	@SerializedName("token_type")
+	private String mTokenType;
+	
+	@SerializedName("expires_in")
+	private String mExpiresIn;
 	
 	public OAuth2TokenResponse(String credential) {
-		access_token = credential;
+		mAccessToken = credential;
 	}
 	
 	public String getAccessToken() {
-		return access_token;
+		return mAccessToken;
+	}
+	
+	public String toString() {
+		return mAccessToken
+				+ " {type: " + mTokenType
+				+ ", expires: " + mExpiresIn + "}";
 	}
 	
 }

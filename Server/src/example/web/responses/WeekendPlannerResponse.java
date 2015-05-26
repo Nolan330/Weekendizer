@@ -1,85 +1,112 @@
 package example.web.responses;
 
 import java.time.LocalDateTime;
+import java.util.Iterator;
 import java.util.List;
-import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import example.web.ops.WeekendPlannerOps.Event;
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
+
+import example.web.model.City;
+import example.web.model.Event;
+import example.web.model.Flight;
+import example.web.model.TripVariant;
 
 public class WeekendPlannerResponse {
 	
-	public List<TripVariant> TripVariants;
-	private final Double InitBudget;
-	private FlightInfoResponse mFlight;
+	@SerializedName("tripVariants")
+	private List<TripVariant> mTripVariants;
 	
-	public WeekendPlannerResponse(Double initBudget, int numVariants) {
-		InitBudget = initBudget;
-		TripVariants = 
-			Stream.generate(() -> new TripVariant(InitBudget))
+	@SerializedName("initBudget")
+	private final Double mInitBudget;
+	
+	@SerializedName("originCity")
+	private final City mOriginCity;
+	
+	@SerializedName("destinationCity")
+	private final City mDestinationCity;
+	
+	@SerializedName("flight")
+	private Flight mFlight;
+	
+	@Expose(serialize = false, deserialize = false)
+	private Iterator<TripVariant> mEventIt;
+
+	public WeekendPlannerResponse(Double initBudget,
+			City originCity, City destCity, int numVariants) {
+		mInitBudget = initBudget;
+		mOriginCity = originCity;
+		mDestinationCity = destCity;
+		mTripVariants = 
+			Stream.generate(() -> new TripVariant(mInitBudget))
 				.limit(numVariants)
 				.collect(Collectors.toList());
 	}
 	
 	public Double getInitialBudget() {
-		return InitBudget;
+		return mInitBudget;
+	}
+	
+	public String getOriginCityCode() {
+		return mOriginCity.getCode();
+	}
+	
+	public String getDestinationCityCode() {
+		return mDestinationCity.getCode();
+	}
+	
+	public String getDestinationCityName() {
+		return mDestinationCity.getName();
 	}
 	
 	public Double getBudgetAfterFlight() {
-		return InitBudget - mFlight.getFare();
+		return mInitBudget - mFlight.getFare();
 	}
 	
-	public FlightInfoResponse getFlight() {
+	public Flight getFlight() {
 		return mFlight;
 	}
 	
-	public LocalDateTime getDepartureDateTime() {
-		return mFlight.getDepartureDateTime();
+	public LocalDateTime getDepartingArrivalDateTime() {
+		return LocalDateTime.parse(mFlight.getDepartingArrivalDateTime());
 	}
 	
-	public LocalDateTime getReturnDateTime() {
-		return mFlight.getReturnDateTime();
+	public LocalDateTime getReturningDepartureDateTime() {
+		return LocalDateTime.parse(mFlight.getReturningDepartureDateTime());
 	}
 	
 	public WeekendPlannerResponse update(FlightInfoResponse response) {
-		mFlight = response;
-		TripVariants.parallelStream()
-			.forEach(tV -> tV.subtractFromBudget(response.getFare()));
+		mFlight = response.getFlight();
 		return this;
 	}
 	
 	public WeekendPlannerResponse update(TicketInfoResponse response) {
-		Random r = new Random();
-		// much more involved
-		TripVariants.parallelStream()
-			.forEach(tV -> tV.subtractFromBudget(r.nextDouble() * 105 + 1));
-		TripVariants.forEach(System.out::println);
+		mEventIt = mTripVariants.iterator();
+		response.getEvents().stream()
+			.distinct()
+			.forEach(event -> {
+				if (mEventIt.hasNext()) 
+					mEventIt.next().addEvent(event);
+				else
+					mEventIt = mTripVariants.iterator();
+			});
+		
+		System.out.println(this);
 		return this;
 	}
-
-	public class TripVariant {
-		
-		private Double mCurrentBudget;
-		private List<Event> mFridayPlan;
-		private List<Event> mSaturdayPlan;
-		private List<Event> mSundayPlan;
-		
-		public TripVariant(Double currentBudget) {
-			mCurrentBudget = currentBudget;
+	
+	public String toString() {
+		String variants = "";
+		for(TripVariant tv : mTripVariants) {
+			String events = "";
+			for(Event e : tv.getSchedule()) {
+				events += "\n\t\t" + e;
+			}
+			variants += "\n\tVariant:" + events;
 		}
-		
-		public Double getRemainingBudget() {
-			return mCurrentBudget;
-		}
-		
-		public Double subtractFromBudget(Double amount) {
-			return mCurrentBudget -= amount;
-		}
-		
-		public String toString() {
-			return "{Current Budget: " + mCurrentBudget + "}";
-		}
+		return "{Flight: " + mFlight + "\nVariants:" + variants + "}";
 	}
 
 }

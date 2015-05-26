@@ -5,7 +5,6 @@ import example.web.utils.NoAuthUtils;
 import example.web.utils.BaseOAuth2Utils;
 import retrofit.RestAdapter;
 import retrofit.RestAdapter.LogLevel;
-import retrofit.client.OkClient;
 import retrofit.client.UrlConnectionClient;
 
 public abstract class BaseOps<T> {

@@ -1,20 +1,21 @@
 package example.web.model;
 
+import com.google.gson.annotations.SerializedName;
+
 public class City {
 
-	public String code;
-	public String name;
-	public String countryCode;
-	public String countryName;
-	public String regionName;
+	@SerializedName("code")
+	private String mCode;
 	
-	public City(String c, String n, String cCode,
-				String cName, String rName) {
-		code = c;
-		name = n;
-		countryCode = cCode;
-		countryName = cName;
-		regionName = rName;
+	@SerializedName("name")
+	private String mName;
+	
+	public String getCode() {
+		return mCode;
+	}
+	
+	public String getName() {
+		return mName;
 	}
 	
 }

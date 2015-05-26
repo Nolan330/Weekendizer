@@ -21,9 +21,6 @@ public abstract class BaseOAuth2Utils {
 	public String makeCredential(Integer tokenType) {
 		switch(tokenType) {
 		case APP_TOKEN:
-			System.out.println("I am making a app credential, and here is my result! " + (!mIsPreEncoded ? 
-				mBase64Encoder.encodeToString(mApplicationToken.getBytes())
-				: mApplicationToken));
 			return !mIsPreEncoded ? 
 				mBase64Encoder.encodeToString(mApplicationToken.getBytes())
 				: mApplicationToken;

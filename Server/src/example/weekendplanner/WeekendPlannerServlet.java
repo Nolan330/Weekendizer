@@ -14,7 +14,6 @@ import com.google.gson.Gson;
 
 import example.web.ops.WeekendPlannerOps;
 import example.web.requests.WeekendPlannerRequest;
-import example.web.responses.FlightInfoResponse;
 
 /**
  * Servlet implementation class WeekendPlannerServlet
@@ -76,9 +75,9 @@ public class WeekendPlannerServlet extends HttpServlet {
 		
 		System.out.println(req.toString());
 		
-		WeekendPlannerOps wOps = new WeekendPlannerOps(req);
+		WeekendPlannerOps wOps = new WeekendPlannerOps();
 		
-		wOps.initTrip()
+		wOps.initTrip(req)
 		.thenCombineAsync(
 			wOps.getFlightAuthToken(),
 			wOps::getFlight,
@@ -88,11 +87,12 @@ public class WeekendPlannerServlet extends HttpServlet {
 				wOps.getTicketAuthToken(),
 				wOps::getTickets,
 				wOps.getExecutor()))
-	//	.thenCompose(flatmap -> flatmap)
-//		.thenCombineAsync(
-//			wOps.getWeather(),
-//			wOps::fillWeekend,
-//			wOps.getExecutor())
+		.thenCompose(var -> var)
+	//	.thenCompose(trip -> 
+			//trip.thenCombineAsync(
+	//			wOps.getWeather(),
+	//			wOps::fillWeekend,
+	//			wOps.getExecutor())
 //		.thenAcceptAsync(
 //			tripVariants -> sendResponse(response, tripVariants),
 //			wOps.getExecutor())
