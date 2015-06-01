@@ -1,12 +1,12 @@
 package example.web.ops;
 
 import example.web.responses.OAuth2TokenResponse;
-import example.web.responses.TicketInfoResponse;
-import example.web.services.TicketInfoService;
+import example.web.responses.TicketResponse;
+import example.web.services.TicketService;
 import example.web.utils.BaseOAuth2Utils;
 import example.web.utils.TicketAuthUtils;
 
-public class TicketOps extends BaseOps<TicketInfoService> {
+public class TicketOps extends BaseOps<TicketService> {
 	
 	/**
 	 * Default ticket parameters
@@ -18,17 +18,19 @@ public class TicketOps extends BaseOps<TicketInfoService> {
 	private final String LIMIT = "500";
 	
 	public TicketOps(String endpoint) {
-		super(endpoint, TicketInfoService.class, new TicketAuthUtils());
+		super(endpoint, TicketService.class, new TicketAuthUtils());
 	}
 
 	@Override
 	protected OAuth2TokenResponse authorize() {
+		System.out.println("TicketOps::authorize - " + System.currentTimeMillis());
 		return new OAuth2TokenResponse(
 			mAuthUtils.makeCredential(BaseOAuth2Utils.APP_TOKEN));
 	}
 	
-	public TicketInfoResponse getTickets(String authToken,
+	public TicketResponse getTickets(String authToken,
 			String dateTimeRange, String city, String maxPrice) {
+		System.out.println("TicketOps::getTickets - " + System.currentTimeMillis());
 		return mService.queryTickets(
 			authToken,
 			dateTimeRange,

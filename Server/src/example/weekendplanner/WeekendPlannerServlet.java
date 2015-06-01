@@ -78,25 +78,24 @@ public class WeekendPlannerServlet extends HttpServlet {
 		WeekendPlannerOps wOps = new WeekendPlannerOps();
 		
 		wOps.initTrip(req)
-		.thenCombineAsync(
+		.thenCombine(
 			wOps.getFlightAuthToken(),
-			wOps::getFlight,
-			wOps.getExecutor())
-		.thenCompose(trip ->
-			trip.thenCombineAsync(
+			wOps::getFlight)
+		.thenCompose(trip->
+			trip.thenCombine(
 				wOps.getTicketAuthToken(),
-				wOps::getTickets,
-				wOps.getExecutor()))
+				wOps::getTickets))
+		.thenCompose(trip ->
+			trip.thenCompose(wOps::getWeather))
+		.thenCombine(
+			wOps.getGeocode(req.getDestinationCity().getName()),
+			wOps::fillWeekend)
 		.thenCompose(var -> var)
-	//	.thenCompose(trip -> 
-			//trip.thenCombineAsync(
-	//			wOps.getWeather(),
-	//			wOps::fillWeekend,
-	//			wOps.getExecutor())
 //		.thenAcceptAsync(
 //			tripVariants -> sendResponse(response, tripVariants),
 //			wOps.getExecutor())
 		.join();
+		
 	}
 	
 	// if toJson needs a ".class" second parameter, could maybe use an object wrapper that calls this.class?

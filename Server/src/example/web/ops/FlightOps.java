@@ -1,13 +1,13 @@
 package example.web.ops;
 
-import example.web.responses.CityInfoResponse;
-import example.web.responses.FlightInfoResponse;
+import example.web.responses.CityResponse;
+import example.web.responses.FlightResponse;
 import example.web.responses.OAuth2TokenResponse;
-import example.web.services.FlightInfoService;
+import example.web.services.FlightService;
 import example.web.utils.BaseOAuth2Utils;
 import example.web.utils.FlightAuthUtils;
 
-public class FlightOps extends BaseOps<FlightInfoService> {
+public class FlightOps extends BaseOps<FlightService> {
 	
 	/**
 	 * Default flight parameters
@@ -17,29 +17,32 @@ public class FlightOps extends BaseOps<FlightInfoService> {
 	private final String LIMIT_RESPONSES = "1";
 	
 	public FlightOps(String endpoint) {
-		super(endpoint, FlightInfoService.class, new FlightAuthUtils());
+		super(endpoint, FlightService.class, new FlightAuthUtils());
 	}
 
 	@Override
 	protected OAuth2TokenResponse authorize() { 
+		System.out.println("FlightOps::authorize - " + System.currentTimeMillis());
 		return mService.authorize(
 			mAuthUtils.makeCredential(BaseOAuth2Utils.USER_TOKEN),
 			mAuthUtils.getGrantType());
 	}
 	
-	public CityInfoResponse getCities(String authToken, String country) {
+	public CityResponse getCities(String authToken, String country) {
+		System.out.println("FlightOps::getCities - " + System.currentTimeMillis());
 		return mService.queryCities(
 			authToken,
 			country);
 	}
 	
-	public FlightInfoResponse getFlight(
+	public FlightResponse getFlight(
 			String authToken, String origin, String destination,
 			String departureDate, String returnDate, String maxFare) {
 		// If the origin and destination city are the same,
 		// return a mock FlightInfoResponse with a fare of $0.00
+		System.out.println("FlightOps::getFlight - " + System.currentTimeMillis());
 		return origin.equals(destination) ?
-			new FlightInfoResponse(
+			new FlightResponse(
 				origin, destination, departureDate, returnDate) :
 			mService.queryFlights(
 				authToken,

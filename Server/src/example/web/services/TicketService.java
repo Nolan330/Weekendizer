@@ -7,9 +7,9 @@ import retrofit.http.Header;
 import retrofit.http.POST;
 import retrofit.http.Query;
 import example.web.responses.OAuth2TokenResponse;
-import example.web.responses.TicketInfoResponse;
+import example.web.responses.TicketResponse;
 
-public interface TicketInfoService {
+public interface TicketService {
 	
 	@FormUrlEncoded
 	@POST("/login")
@@ -21,7 +21,7 @@ public interface TicketInfoService {
 		@Field("scope") String scope);
 	
 	@GET("/search/catalog/events/v2")
-	TicketInfoResponse queryTickets(
+	TicketResponse queryTickets(
 		@Header("Authorization") String auth,
 		@Query("date") String dateRange,
 		@Query("city") String city,

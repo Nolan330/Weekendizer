@@ -6,9 +6,9 @@ import com.google.gson.annotations.SerializedName;
 
 import example.web.model.City;
 
-public class CityInfoResponse {
+public class CityResponse {
 
 	@SerializedName("Cities")
-	public List<City> mCities;
+	private List<City> mCities;
 	
 }

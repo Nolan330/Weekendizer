@@ -11,7 +11,7 @@ public abstract class BaseOAuth2Utils {
 	
 	protected String mClientKey;
 	protected String mClientSecret;
-	protected String mApplicationToken;
+	protected String mApplicationKey;
 	protected Boolean mIsPreEncoded;
 	protected String mGrantType;
 	protected String mUsername;
@@ -22,8 +22,8 @@ public abstract class BaseOAuth2Utils {
 		switch(tokenType) {
 		case APP_TOKEN:
 			return !mIsPreEncoded ? 
-				mBase64Encoder.encodeToString(mApplicationToken.getBytes())
-				: mApplicationToken;
+				mBase64Encoder.encodeToString(mApplicationKey.getBytes())
+				: mApplicationKey;
 		case USER_TOKEN:
 			String cred =
 				(!mIsPreEncoded ? 

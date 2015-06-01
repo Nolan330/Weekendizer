@@ -2,6 +2,7 @@ package example.web.utils;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.Period;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
 
@@ -25,6 +26,12 @@ public class DateUtils {
 		return removeSeconds(flight.getDepartingArrivalDateTime())
 			+ " TO "
 			+ removeSeconds(flight.getReturningDepartureDateTime());
+	}
+	
+	public static Integer getNumDaysUntilNext(DayOfWeek day) {
+		LocalDate today = LocalDate.now();
+		return Period.between(today, getDateOfNext(day)).getDays()
+				+ (today.getDayOfWeek().compareTo(DayOfWeek.FRIDAY) > 0 ? 7 : 0);
 	}
 	
 	private static String removeSeconds(String dateTime) {

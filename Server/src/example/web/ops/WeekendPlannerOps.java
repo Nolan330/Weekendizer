@@ -6,10 +6,14 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
+import java.util.stream.Collectors;
 
+import example.web.model.Weather;
 import example.web.requests.WeekendPlannerRequest;
-import example.web.responses.CityInfoResponse;
+import example.web.responses.CityResponse;
+import example.web.responses.GeoCodeResponse;
 import example.web.responses.WeekendPlannerResponse;
+import example.web.responses.PlacesResponse;
 import example.web.utils.DateUtils;
 
 public class WeekendPlannerOps {
@@ -21,8 +25,8 @@ public class WeekendPlannerOps {
 	private final int NUM_TRIP_VARIANTS = 5;
 	private final String FLIGHT_ENDPOINT = "https://api.test.sabre.com/";
 	private final String TICKET_ENDPOINT = "https://api.stubhubsandbox.com/";
-	private final String WEATHER_ENDPOINT = "api.openweathermap.org/";
-	private final String PLACES_ENDPOINT = "placeholder.ignore.eu/";
+	private final String WEATHER_ENDPOINT = "http://api.openweathermap.org/";
+	private final String PLACES_ENDPOINT = "https://maps.googleapis.com/";
 	
 	/**
 	 * The executor responsible for scheduling threads
@@ -75,7 +79,7 @@ public class WeekendPlannerOps {
 			});
 	}
 	
-	// Return a CompletableFuture in order to apply 
+	// Return a CompletableFuture in order to compose asynchronous computations
 	public CompletableFuture<WeekendPlannerResponse> initTrip(
 			WeekendPlannerRequest req) {
 		return CompletableFuture.completedFuture(
@@ -92,7 +96,7 @@ public class WeekendPlannerOps {
 			getExecutor());
 	}
 	
-	public CompletableFuture<CityInfoResponse> getCities(
+	public CompletableFuture<CityResponse> getCities(
 			String country, String authToken) {
 		return CompletableFuture.supplyAsync(
 			() -> mFlightOps.getCities(authToken, country),
@@ -122,9 +126,10 @@ public class WeekendPlannerOps {
 	
 	public CompletableFuture<WeekendPlannerResponse> getTickets(
 			WeekendPlannerResponse tripVariants, String authToken) {
-		// These methods will return a throttle error because requests are made
+		// These methods will return a server throttle error because requests are made
 		// too quickly
-		/**List<CompletableFuture<TicketInfoResponse>> responses =
+		/**
+		List<CompletableFuture<TicketInfoResponse>> responses =
 		Arrays.asList(DayOfWeek.FRIDAY, DayOfWeek.SATURDAY, DayOfWeek.SUNDAY)
 			.stream()
 			.map(day -> getTicketsForDay(day, tripVariants, authToken))
@@ -135,16 +140,15 @@ public class WeekendPlannerOps {
 			.map(CompletableFuture::join)
 			.forEach(tripVariants::update);
 		
-		// Keep interface consistent for composability
-		return CompletableFuture.completedFuture(tripVariants);*/
-		
-//-----------------------------------------------------------------------------
-		
-		/**return getTicketsForDay(DayOfWeek.FRIDAY, tripVariants, authToken)
+		// Keep interface consistent
+		return CompletableFuture.completedFuture(tripVariants);
+	----------------------------------------------------------------------------
+		return getTicketsForDay(DayOfWeek.FRIDAY, tripVariants, authToken)
 			.thenComposeAsync(variants ->
 				getTicketsForDay(DayOfWeek.SATURDAY, variants, authToken))
 			.thenComposeAsync(variants ->
-				getTicketsForDay(DayOfWeek.SUNDAY, variants, authToken));*/
+				getTicketsForDay(DayOfWeek.SUNDAY, variants, authToken));
+		*/
 		
 		// As such, the request cannot be broken into days
 		return CompletableFuture.supplyAsync(
@@ -157,15 +161,50 @@ public class WeekendPlannerOps {
 			.thenApply(tripVariants::update);
 	}
 	
-	public CompletableFuture<Weather> getWeather() {
-		return null;
+	public CompletableFuture<WeekendPlannerResponse> getWeather(
+			WeekendPlannerResponse tripVariants) {
+		return CompletableFuture.supplyAsync(
+				() -> mWeatherOps.getWeather(
+					tripVariants.getDestinationCityName(),
+					DateUtils.getNumDaysUntilNext(DayOfWeek.MONDAY)),
+				getExecutor())
+			.thenApply(tripVariants::update);
 	}
 	
-	public CompletableFuture<List<WeekendPlannerResponse>> fillWeekend(
-			WeekendPlannerResponse tripVariants, Weather weather) {
-		return null;
+	public CompletableFuture<GeoCodeResponse> getGeocode(
+			String destinationCityName) {
+		return CompletableFuture.supplyAsync(
+			() -> mPlacesOps.getGeocode(
+				mPlacesOps.getAuthToken(),
+				destinationCityName),
+			getExecutor());
 	}
+	
+	public CompletableFuture<WeekendPlannerResponse> fillWeekend(
+			WeekendPlannerResponse tripVariants, GeoCodeResponse geocode) {
+		// Here, the server handles quotas differently, and the server is able to
+		// handle day-level requests
+		List<CompletableFuture<PlacesResponse>> responses =
+		tripVariants.getWeather().stream()
+			.map(dayWeather -> getPlacesForDay(dayWeather, geocode))
+			.collect(Collectors.toList());
+		
+		responses.stream()
+			.map(CompletableFuture::join)
+			.forEach(tripVariants::update);
 
-	public class Weather {}
+		return CompletableFuture.completedFuture(tripVariants);
+	}
+	
+	private CompletableFuture<PlacesResponse> getPlacesForDay(
+			Weather dayWeather, GeoCodeResponse geocode) {
+		return CompletableFuture.supplyAsync(
+			() -> mPlacesOps.getPlaces(
+				mPlacesOps.getAuthToken(),
+				geocode.getLat(),
+				geocode.getLng(),
+				dayWeather),
+			getExecutor());
+	}
 
 }

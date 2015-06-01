@@ -1,8 +1,8 @@
 package example.web.services;
 
 import example.web.responses.OAuth2TokenResponse;
-import example.web.responses.CityInfoResponse;
-import example.web.responses.FlightInfoResponse;
+import example.web.responses.CityResponse;
+import example.web.responses.FlightResponse;
 import retrofit.http.Field;
 import retrofit.http.FormUrlEncoded;
 import retrofit.http.GET;
@@ -10,7 +10,7 @@ import retrofit.http.Header;
 import retrofit.http.POST;
 import retrofit.http.Query;
 
-public interface FlightInfoService {
+public interface FlightService {
 	
 	@FormUrlEncoded
 	@POST("/v1/auth/token")
@@ -19,12 +19,12 @@ public interface FlightInfoService {
 		@Field("grant_type") String value);
 	
 	@GET("/v1/lists/supported/cities")
-	CityInfoResponse queryCities(
+	CityResponse queryCities(
 		@Header("Authorization") String token,
 		@Query("country") String country);
 	
 	@GET("/v1/shop/flights")
-	FlightInfoResponse queryFlights(
+	FlightResponse queryFlights(
 		 @Header("Authorization") String token,
 		 @Query("origin") String origin,
 		 @Query("destination") String destination,

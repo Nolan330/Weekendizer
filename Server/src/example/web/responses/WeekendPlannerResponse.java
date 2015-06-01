@@ -13,6 +13,7 @@ import example.web.model.City;
 import example.web.model.Event;
 import example.web.model.Flight;
 import example.web.model.TripVariant;
+import example.web.model.Weather;
 
 public class WeekendPlannerResponse {
 	
@@ -30,6 +31,9 @@ public class WeekendPlannerResponse {
 	
 	@SerializedName("flight")
 	private Flight mFlight;
+	
+	@SerializedName("weather")
+	private List<Weather> mWeather;
 	
 	@Expose(serialize = false, deserialize = false)
 	private Iterator<TripVariant> mEventIt;
@@ -77,12 +81,16 @@ public class WeekendPlannerResponse {
 		return LocalDateTime.parse(mFlight.getReturningDepartureDateTime());
 	}
 	
-	public WeekendPlannerResponse update(FlightInfoResponse response) {
+	public List<Weather> getWeather() {
+		return mWeather;
+	}
+	
+	public WeekendPlannerResponse update(FlightResponse response) {
 		mFlight = response.getFlight();
 		return this;
 	}
 	
-	public WeekendPlannerResponse update(TicketInfoResponse response) {
+	public WeekendPlannerResponse update(TicketResponse response) {
 		mEventIt = mTripVariants.iterator();
 		response.getEvents().stream()
 			.distinct()
@@ -92,8 +100,16 @@ public class WeekendPlannerResponse {
 				else
 					mEventIt = mTripVariants.iterator();
 			});
-		
-		System.out.println(this);
+		return this;
+	}
+	
+	public WeekendPlannerResponse update(WeatherResponse weather) {
+		mWeather = weather.getWeekendWeather();
+		return this;
+	}
+	
+	public WeekendPlannerResponse update(PlacesResponse response) {
+		// fill appropriate day with random places from response
 		return this;
 	}
 	
@@ -106,7 +122,7 @@ public class WeekendPlannerResponse {
 			}
 			variants += "\n\tVariant:" + events;
 		}
-		return "{Flight: " + mFlight + "\nVariants:" + variants + "}";
+		return "Flight: " + mFlight + "\nVariants:" + variants;
 	}
 
 }

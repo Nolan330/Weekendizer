@@ -9,7 +9,7 @@ import com.google.gson.annotations.SerializedName;
 
 import example.web.model.Flight;
 
-public class FlightInfoResponse {
+public class FlightResponse {
 
 	@SerializedName("PricedItineraries")
 	private List<Flight> mPricedItineraries;
@@ -26,7 +26,7 @@ public class FlightInfoResponse {
 	@SerializedName("OriginLocation")
 	private String mOriginLocation;
 	
-	public FlightInfoResponse(String returnDateTime,
+	public FlightResponse(String returnDateTime,
 			String departureDateTime, String destinationLocation,
 			String originLocation) {
 		mPricedItineraries = Arrays.asList(new Flight());
