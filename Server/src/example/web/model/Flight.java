@@ -4,14 +4,21 @@ import java.util.List;
 
 import com.google.gson.annotations.SerializedName;
 
+/**
+ * A POJO of the relevant fields of the Flight information returned
+ * by the Sabre Flights API necessary for weekend planning
+ */
 public class Flight {
 	
 	/**
-	 * Member variables from serialization
+	 * The itinerary and timing information of the flight
 	 */
 	@SerializedName("AirItinerary")
 	private AirItinerary mAirItinerary;
 
+	/**
+	 * The pricing information of the flight
+	 */
 	@SerializedName("AirItineraryPricingInfo")
 	private AirItineraryPricingInfo mAirItineraryPricingInfo;
 	
@@ -43,6 +50,9 @@ public class Flight {
 		return mAirItinerary + "\n\tcosting " + mAirItineraryPricingInfo;
 	}
 	
+	/**
+	 * A nested POJO upon which the Flight POJO relies
+	 */
 	private class AirItinerary {
 		@SerializedName("OriginDestinationOptions")
 		private OriginDestinationOptions mOriginDestinationOptions;
@@ -68,6 +78,9 @@ public class Flight {
 		}
 	}
 	
+	/**
+	 * A nested POJO upon which the Flight POJO relies
+	 */
 	private class OriginDestinationOptions {
 		@SerializedName("OriginDestinationOption")
 		private List<FlightSegment> mOriginDestinationOption;
@@ -103,6 +116,9 @@ public class Flight {
 		}
 	}
 	
+	/**
+	 * A nested POJO upon which the Flight POJO relies
+	 */
 	private class FlightSegment {
 		@SerializedName("FlightSegment")
 		private List<Segment> mFlightSegment;
@@ -137,6 +153,9 @@ public class Flight {
 		}
 	}
 	
+	/**
+	 * A nested POJO upon which the Flight POJO relies
+	 */
 	private class Segment {
 		@SerializedName("DepartureAirport")
 		private Airport mDepartureAirport;

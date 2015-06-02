@@ -19,29 +19,67 @@ import example.web.responses.PlacesResponse;
 import example.web.responses.TicketResponse;
 import example.web.responses.WeatherResponse;
 
+/**
+ * WeekendPlannerResponse is responsible for holding the
+ * response weekend data sent back to the client. The
+ * asynchronous operations directly update this response
+ * so that additional state beyond what is needed for the
+ * weekend response is not held. It is also to centralize
+ * computations relating to planning the weekend, such as
+ * selecting the various events for each day, tracking
+ * remaining budget for each variant of the weekend, etc.
+ */
 public class WeekendPlannerResponse {
 	
+	/**
+	 * A list of different variations of things to do
+	 * at the destination city this weekend, each keeping
+	 * track of the individual remaining budget
+	 */
 	@SerializedName("tripVariants")
 	private List<TripVariant> mTripVariants;
 	
+	/**
+	 * The initial budget provided by the client
+	 */
 	@SerializedName("initBudget")
 	private final Double mInitBudget;
 	
+	/**
+	 * The origin city provided by the client
+	 */
 	@SerializedName("originCity")
 	private final City mOriginCity;
 	
+	/**
+	 * The destination city provided by the client
+	 */
 	@SerializedName("destinationCity")
 	private final City mDestinationCity;
 	
+	/**
+	 * The flight used for the trip, returned by
+	 * WeekendPlannerOps::getFlight which queries the Sabre Flights API
+	 */
 	@SerializedName("flight")
 	private Flight mFlight;
 	
+	/**
+	 * The weekend weather forecast at the destination city
+	 */
 	@SerializedName("weather")
 	private List<Weather> mWeather;
 	
+	/**
+	 * An iterator used in distributing events across the trip variants
+	 * Note: used internally, does not need to be serialized
+	 */
 	@Expose(serialize = false, deserialize = false)
 	private Iterator<TripVariant> mEventIt;
 
+	/**
+	 * Initialize the Response with the given parameters
+	 */
 	public WeekendPlannerResponse(Double initBudget,
 			City originCity, City destCity, int numVariants) {
 		mInitBudget = initBudget;
@@ -89,11 +127,19 @@ public class WeekendPlannerResponse {
 		return mWeather;
 	}
 	
+	/**
+	 * Set the flight returned from the Sabre API 
+	 * and return the updated response
+	 */
 	public WeekendPlannerResponse update(FlightResponse response) {
 		mFlight = response.getFlight();
 		return this;
 	}
 	
+	/**
+	 * Distribute the events returned from the StubHub API across
+	 * the trip variants and return the updated response
+	 */
 	public WeekendPlannerResponse update(TicketResponse response) {
 		mEventIt = mTripVariants.iterator();
 		response.getEvents().stream()
@@ -107,14 +153,28 @@ public class WeekendPlannerResponse {
 		return this;
 	}
 	
+	/**
+	 * Set the weekend weather returned from the OpenWeatherMap API
+	 * and return the updated response
+	 */
 	public WeekendPlannerResponse update(WeatherResponse response) {
 		mWeather = response.getWeekendWeather();
 		return this;
 	}
 	
+	/**
+	 * Add various places returned from the Google Places API
+	 * to each trip variant and return the updated response
+	 */
 	public WeekendPlannerResponse update(PlacesResponse response) {
 		mTripVariants.stream()
 			.forEach(trip -> trip.addPlaces(response.getRandomPlaces()));
+		return this;
+	}
+	
+	public WeekendPlannerResponse update(PlacesResponse resp1, PlacesResponse resp2) {
+		mTripVariants.stream()
+			.forEach(trip -> trip.addPlaces(resp1.getRandomPlaces()));
 		return this;
 	}
 	

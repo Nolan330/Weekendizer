@@ -10,6 +10,9 @@ import retrofit.http.Header;
 import retrofit.http.POST;
 import retrofit.http.Query;
 
+/**
+ * The Retrofit service that interacts with the Sabre Flights API
+ */
 public interface FlightService {
 	
 	@FormUrlEncoded

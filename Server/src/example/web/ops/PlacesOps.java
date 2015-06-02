@@ -11,6 +11,10 @@ import example.web.services.PlacesService;
 import example.web.utils.BaseOAuth2Utils;
 import example.web.utils.PlacesAuthUtils;
 
+/**
+ * Provides API-specific constants and an interface to interact
+ * with the Google Places API
+ */
 public class PlacesOps extends BaseOps<PlacesService> {
 	
 	/**
@@ -28,11 +32,20 @@ public class PlacesOps extends BaseOps<PlacesService> {
 		super(endpoint, PlacesService.class, new PlacesAuthUtils());
 	}
 	
+	/**
+	 * Override the getAuthToken method to only return
+	 * the raw application key, as it is a query parameter rather
+	 * than a request header, and does not need the "Bearer" 
+	 * specification
+	 */
 	@Override
 	public String getAuthToken() {
 		return authorize().getAccessToken();
 	}
 
+	/**
+	 * Provides the appropriate Application token for the API
+	 */
 	@Override
 	protected OAuth2TokenResponse authorize() {
 		System.out.println("PlacesOps::authorize - " + System.currentTimeMillis());
@@ -40,6 +53,11 @@ public class PlacesOps extends BaseOps<PlacesService> {
 			mAuthUtils.makeCredential(BaseOAuth2Utils.APP_TOKEN));
 	}
 	
+	/**
+	 * Queries the API for places within 25000 meters of the given
+	 * lat, lng coordinates that are appropriate for the given weather
+	 * conditions
+	 */
 	public PlacesResponse getPlaces(String authToken,
 			String lat, String lng, Weather weather) {
 		System.out.println("PlacesOps::getPlaces - " + System.currentTimeMillis());
@@ -51,6 +69,9 @@ public class PlacesOps extends BaseOps<PlacesService> {
 				OUTDOOR_PLACES : INDOOR_PLACES);
 	}
 	
+	/**
+	 * Queries the API for the lat, lng coodrinates of a given city
+	 */
 	public GeoCodeResponse getGeocode(String authToken, String city) {
 		System.out.println("PlacesOps::getGeocode - " + System.currentTimeMillis());
 		return mService.queryGeocode(

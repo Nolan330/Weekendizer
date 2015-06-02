@@ -1,5 +1,8 @@
 package example.web.utils;
 
+/**
+ * The specific credential information for the Sabre Flights API
+ */
 public class FlightAuthUtils extends BaseOAuth2Utils {
 	
 	{

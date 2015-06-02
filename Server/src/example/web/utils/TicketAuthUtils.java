@@ -1,5 +1,8 @@
 package example.web.utils;
 
+/**
+ * The specific credential information for the StubHub API
+ */
 public class TicketAuthUtils extends BaseOAuth2Utils {
 	
 	{

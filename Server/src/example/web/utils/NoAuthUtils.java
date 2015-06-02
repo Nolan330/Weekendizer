@@ -1,6 +1,8 @@
 package example.web.utils;
 
-// For APIs with no authorization requirements
+/**
+ * A "no-op" class For APIs with no authorization requirements
+ */
 public class NoAuthUtils extends BaseOAuth2Utils {
 	
 	{

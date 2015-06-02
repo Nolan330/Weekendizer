@@ -6,6 +6,9 @@ import com.google.gson.annotations.SerializedName;
 
 import example.web.model.Geocode.Geometry;
 
+/**
+ * A POJO representing a place returned from the Google Places API
+ */
 public class Place {
 	
 	@SerializedName("geometry")

@@ -4,6 +4,9 @@ import example.web.responses.WeatherResponse;
 import retrofit.http.GET;
 import retrofit.http.Query;
 
+/**
+ * The Retrofit service that interacts with the OpenWeatherMaps API
+ */
 public interface WeatherService {
 
 	@GET("/data/2.5/forecast/daily")

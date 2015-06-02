@@ -9,6 +9,9 @@ import retrofit.http.Query;
 import example.web.responses.OAuth2TokenResponse;
 import example.web.responses.TicketResponse;
 
+/**
+ * The Retrofit service that interacts with the StubHub API
+ */
 public interface TicketService {
 	
 	@FormUrlEncoded

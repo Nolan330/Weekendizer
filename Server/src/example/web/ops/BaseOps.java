@@ -7,10 +7,25 @@ import retrofit.RestAdapter;
 import retrofit.RestAdapter.LogLevel;
 import retrofit.client.UrlConnectionClient;
 
+/**
+ * Provides common members and functionality that
+ * each class that interacts with an API probably needs
+ */
 public abstract class BaseOps<T> {
 	
+	/**
+	 * The endpoint of the API being queried
+	 */
 	protected String mEndpoint;
+	
+	/**
+	 * The Retrofit service that handles querying the API
+	 */
 	protected T mService;
+	
+	/**
+	 * The required Authorization utilities if necessary
+	 */
 	protected BaseOAuth2Utils mAuthUtils;
 	
 	protected BaseOps(String endpoint, Class<T> serviceClass) {
@@ -33,10 +48,18 @@ public abstract class BaseOps<T> {
 		return mEndpoint;
 	}
 	
+	/**
+	 * Provides the common structure for an OAuth2 token
+	 * i.e. "Bearer <api-token>"
+	 */
 	public String getAuthToken() {
 		return mAuthUtils.makeBearerToken(authorize().getAccessToken());
 	}
 	
+	/**
+	 * Allows the way that each API is authorized to be tailored
+	 * to the specific API
+	 */
 	protected abstract OAuth2TokenResponse authorize();
 	
 	public BaseOAuth2Utils getAuthUtils() {

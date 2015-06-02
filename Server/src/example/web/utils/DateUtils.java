@@ -8,6 +8,9 @@ import java.time.temporal.TemporalAdjusters;
 
 import example.web.model.Flight;
 
+/**
+ * A utility class to compute appropriate times and time ranges
+ */
 public class DateUtils {
 	
 	public static String getFormattedDateOfNext(DayOfWeek day) {

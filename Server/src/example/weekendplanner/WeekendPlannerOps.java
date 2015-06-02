@@ -19,6 +19,13 @@ import example.web.responses.GeoCodeResponse;
 import example.web.responses.PlacesResponse;
 import example.web.utils.DateUtils;
 
+/**
+ * WeekendPlannerOps is a thin layer between the WeekendPlannerServlet
+ * and the individual API operations classes. The point of this class
+ * is to unify the interfaces of accessing asynchronous calls, enabling
+ * them to be composed freely. It also maintains the executor upon which each
+ * asynchronous call is run.
+ */
 public class WeekendPlannerOps {
 	
 	/**
@@ -56,6 +63,9 @@ public class WeekendPlannerOps {
 		init(executor);
 	}
 	
+	/**
+	 * Initialize the Ops with the given executor
+	 */
 	private void init(Executor exec) {
 		mExecutor = exec;
 		
@@ -69,6 +79,11 @@ public class WeekendPlannerOps {
 		return mExecutor;
 	}
 	
+	/**
+	 * Construct a default executor that uses Daemon threads
+	 * that are not able to keep the program alive in the case
+	 * of an early termination in the case of, say, a thrown exception
+	 */
 	private Executor makeDefaultExecutor(int numThreads) {
 		return Executors.newFixedThreadPool(
 			numThreads,
@@ -82,9 +97,15 @@ public class WeekendPlannerOps {
 			});
 	}
 	
-	// Return a CompletableFuture in order to compose asynchronous computations
+	/**
+	 * Initialize the trip with the given request, so that
+	 * state does not have to be kept redundantly
+	 */
 	public CompletableFuture<WeekendPlannerResponse> initTrip(
 			WeekendPlannerRequest req) {
+		// Use .completedFuture so that the interface is consistent
+		// with the other operations in the pipeline. This call
+		// is useful for the beginning of a pipeline
 		return CompletableFuture.completedFuture(
 			new WeekendPlannerResponse(
 				req.getBudget(),
@@ -93,12 +114,19 @@ public class WeekendPlannerOps {
 				NUM_TRIP_VARIANTS));
 	}
 	
+	/**
+	 * Return a token that will authorize requests to the StubHub API
+	 */
 	public CompletableFuture<String> getFlightAuthToken() {
 		return CompletableFuture.supplyAsync(
 			() -> mFlightOps.getAuthToken(),
 			getExecutor());
 	}
 	
+	/**
+	 * Get the available cities for which flights may exist
+	 * according to the Sabre Cities API
+	 */
 	public CompletableFuture<CityResponse> getCities(
 			String country, String authToken) {
 		return CompletableFuture.supplyAsync(
@@ -106,6 +134,10 @@ public class WeekendPlannerOps {
 			getExecutor());
 	}
 
+	/**
+	 * Get flight information from the Sabre Flights API for the
+	 * appropriate dates between the given origin and destination
+	 */
 	public CompletableFuture<WeekendPlannerResponse> getFlight(
 			WeekendPlannerResponse tripVariants, String authToken) {
 		return CompletableFuture.supplyAsync(
@@ -117,16 +149,22 @@ public class WeekendPlannerOps {
 					DateUtils.getFormattedDateOfNext(DayOfWeek.SUNDAY),
 					String.valueOf(tripVariants.getInitialBudget())),
 				getExecutor())
-			// Compare to .thenCompose(tripVariants::update);
 			.thenApply(tripVariants::update);
 	}
 	
+	/**
+	 * Return a token that will authorize requests to the StubHub API
+	 */
 	public CompletableFuture<String> getTicketAuthToken() {
 		return CompletableFuture.supplyAsync(
 			() -> mTicketOps.getAuthToken(),
 			getExecutor());
 	}
 	
+	/**
+	 * Return tickets to relevant events going on in the destiantion city
+	 * on the appropriate weekend
+	 */
 	public CompletableFuture<WeekendPlannerResponse> getTickets(
 			WeekendPlannerResponse tripVariants, String authToken) {
 		// These methods will return a server throttle error because requests are made
@@ -164,6 +202,10 @@ public class WeekendPlannerOps {
 			.thenApply(tripVariants::update);
 	}
 	
+	/**
+	 * Return the weather for as many days as required to capture
+	 * the weekend of the trip
+	 */
 	public CompletableFuture<WeekendPlannerResponse> getWeather(
 			WeekendPlannerResponse tripVariants) {
 		return CompletableFuture.supplyAsync(
@@ -174,6 +216,10 @@ public class WeekendPlannerOps {
 			.thenApply(tripVariants::update);
 	}
 	
+	/**
+	 * Convert a city name to its lat, lng coordinates using
+	 * the Google Geocoding API
+	 */
 	public CompletableFuture<GeoCodeResponse> getGeocode(
 			String destinationCityName) {
 		return CompletableFuture.supplyAsync(
@@ -183,22 +229,31 @@ public class WeekendPlannerOps {
 			getExecutor());
 	}
 	
+	/**
+	 * Fill the weekend with generally free or inexpensive activities
+	 * tailored to the weather on the given day
+	 */
 	public CompletableFuture<WeekendPlannerResponse> fillWeekend(
 			WeekendPlannerResponse tripVariants, GeoCodeResponse geocode) {
 		// Here, the server handles quotas differently, and the server is able to
-		// handle day-level requests
+		// handle concurrent day-level requests
 		List<CompletableFuture<PlacesResponse>> responses =
 		tripVariants.getWeather().stream()
 			.map(dayWeather -> getPlacesForDay(dayWeather, geocode))
 			.collect(Collectors.toList());
 		
+		// When each places request returns, update the response
 		responses.stream()
 			.map(CompletableFuture::join)
 			.forEach(tripVariants::update);
 
+		// Return the updated response, which is completed because of join()
 		return CompletableFuture.completedFuture(tripVariants);
 	}
 	
+	/**
+	 * Return places near a given (lat, lng) appropriate for given weather
+	 */
 	private CompletableFuture<PlacesResponse> getPlacesForDay(
 			Weather dayWeather, GeoCodeResponse geocode) {
 		return CompletableFuture.supplyAsync(

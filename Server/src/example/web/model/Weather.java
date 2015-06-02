@@ -4,6 +4,11 @@ import java.util.List;
 
 import com.google.gson.annotations.SerializedName;
 
+/**
+ * A POJO that includes the relevant fields of the
+ * Weather object from the OpenWeatherMap API necessary
+ * to the WeekendResponse
+ */
 public class Weather {
 	
 	@SerializedName("temp")
@@ -25,6 +30,9 @@ public class Weather {
 		return "Temperature: " + mTemperature + "F, Conditions:" + mConditions;
 	}
 
+	/**
+	 * A nested POJO upon which the Weather object relies
+	 */
 	public class Temperature {
 		
 		@SerializedName("day")
@@ -39,6 +47,9 @@ public class Weather {
 		}
 	}
 	
+	/**
+	 * A nested POJO upon which the Weather object relies
+	 */
 	public class Condition {
 		
 		@SerializedName("main")

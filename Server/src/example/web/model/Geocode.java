@@ -2,6 +2,10 @@ package example.web.model;
 
 import com.google.gson.annotations.SerializedName;
 
+/**
+ * A POJO representing the relevant fields of a geocode of a city
+ * from the Google Geocode API
+ */
 public class Geocode {
 	
 	@SerializedName("geometry")
@@ -19,6 +23,9 @@ public class Geocode {
 		return "{" + getLat() + "," + getLng() + "}";
 	}
 	
+	/**
+	 * A nested POJO upon which the Geocode POJO relies
+	 */
 	public class Geometry {
 		
 		@SerializedName("location")
@@ -33,6 +40,9 @@ public class Geocode {
 		}
 	}
 	
+	/**
+	 * A nested POJO upon which the Geocode POJO relies
+	 */
 	public class LatLng {
 		
 		@SerializedName("lat")

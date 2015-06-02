@@ -6,10 +6,14 @@ import example.web.services.TicketService;
 import example.web.utils.BaseOAuth2Utils;
 import example.web.utils.TicketAuthUtils;
 
+/**
+ * Provides API-specific constants and an interface to interact
+ * with the StubHub API
+ */
 public class TicketOps extends BaseOps<TicketService> {
 	
 	/**
-	 * Default ticket parameters
+	 * Default values
 	 */
 	private final String MIN_AVAILABLE = "1";
 	private final String FIELD_LIST =
@@ -21,6 +25,11 @@ public class TicketOps extends BaseOps<TicketService> {
 		super(endpoint, TicketService.class, new TicketAuthUtils());
 	}
 
+	/**
+	 * Authorizes the StubHub query, which requires only the provided
+	 * app token, and therefore does not need an additional authorize query
+	 * like what is required for the Sabre API calls
+	 */
 	@Override
 	protected OAuth2TokenResponse authorize() {
 		System.out.println("TicketOps::authorize - " + System.currentTimeMillis());
@@ -28,6 +37,11 @@ public class TicketOps extends BaseOps<TicketService> {
 			mAuthUtils.makeCredential(BaseOAuth2Utils.APP_TOKEN));
 	}
 	
+	/**
+	 * Queries the StubHub API for tickets to events in the given
+	 * destination city in the given time range, at no higher than
+	 * the maximum price
+	 */
 	public TicketResponse getTickets(String authToken,
 			String dateTimeRange, String city, String maxPrice) {
 		System.out.println("TicketOps::getTickets - " + System.currentTimeMillis());

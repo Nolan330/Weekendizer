@@ -6,6 +6,10 @@ import java.util.List;
 
 import com.google.gson.annotations.SerializedName;
 
+/**
+ * A POJO representing the fields of a StubHub event necessary for
+ * weekend planning
+ */
 public class Event {
 
 	/**
@@ -65,6 +69,10 @@ public class Event {
 			getDateTime(mEndDateTime);
 	}
 	
+	/**
+	 * Parse the given string into a dateTime, first removing
+	 * the additional zone correction returned by the server
+	 */
 	private LocalDateTime getDateTime(String dateTime) {
 		return LocalDateTime.parse(
 			dateTime.substring(0, dateTime.lastIndexOf("-")));
@@ -74,6 +82,13 @@ public class Event {
 		return mTicketInfo.getPrice();
 	}
 	
+	/**
+	 * Both hashCode() and equals() are overridden to modify 
+	 * how a stream of Events handles the .distinct() intermediate
+	 * operation. We use this to filter multiple postings of 
+	 * the same event on the same day, which would make each trip 
+	 * variation less unique
+	 */
 	@Override
 	public int hashCode() {
 		return getTitle().hashCode() ^ getDate().hashCode();
@@ -99,6 +114,9 @@ public class Event {
 			+ " located at " + mVenue;
 	}
 
+	/**
+	 * Nested POJO upon which the Event POJO relies
+	 */
 	public class Venue {
 		@SerializedName("name")
 		private String mName;
@@ -124,6 +142,9 @@ public class Event {
 		}
 	}
 	
+	/**
+	 * Nested POJO upon which Event relies
+	 */
 	public class TicketInfo {
 		@SerializedName("minPrice")
 		private String mMinPrice;
@@ -146,6 +167,9 @@ public class Event {
 		}
 	}
 	
+	/**
+	 * Nested POJO upon which Event relies
+	 */
 	public class Category {
 		@SerializedName("id")
 		private String mCategoryId;

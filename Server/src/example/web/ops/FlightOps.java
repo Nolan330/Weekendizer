@@ -7,6 +7,10 @@ import example.web.services.FlightService;
 import example.web.utils.BaseOAuth2Utils;
 import example.web.utils.FlightAuthUtils;
 
+/**
+ * Provides API-specific constants and an interface to interact
+ * with the Sabre Flights API
+ */
 public class FlightOps extends BaseOps<FlightService> {
 	
 	/**
@@ -20,6 +24,10 @@ public class FlightOps extends BaseOps<FlightService> {
 		super(endpoint, FlightService.class, new FlightAuthUtils());
 	}
 
+	/**
+	 * The flights API requires a User token that must be
+	 * requested from and returned by the server
+	 */
 	@Override
 	protected OAuth2TokenResponse authorize() { 
 		System.out.println("FlightOps::authorize - " + System.currentTimeMillis());
@@ -28,6 +36,11 @@ public class FlightOps extends BaseOps<FlightService> {
 			mAuthUtils.getGrantType());
 	}
 	
+	/**
+	 * Queries the Flights API for cities with available airports
+	 * NOTE: because the freely available Sabre Sandbox is being used, 
+	 * this is a reduced selection of all cities
+	 */
 	public CityResponse getCities(String authToken, String country) {
 		System.out.println("FlightOps::getCities - " + System.currentTimeMillis());
 		return mService.queryCities(
@@ -35,6 +48,11 @@ public class FlightOps extends BaseOps<FlightService> {
 			country);
 	}
 	
+	/**
+	 * Determines if a flight is needed, and queries the API if necessary.
+	 * Otherwise it is treated as a "fun things to do in my current city"
+	 * request, and the flight is mocked with a cost of $0
+	 */
 	public FlightResponse getFlight(
 			String authToken, String origin, String destination,
 			String departureDate, String returnDate, String maxFare) {

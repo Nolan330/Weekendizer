@@ -9,23 +9,47 @@ import com.google.gson.annotations.SerializedName;
 
 import example.web.model.Flight;
 
+/**
+ * The top-level POJO returned by the Sabre Flights API
+ */
 public class FlightResponse {
 
+	/**
+	 * The itinerary for the flights; the request is limited to one flight
+	 * so this list will only ever be of size 1
+	 */
 	@SerializedName("PricedItineraries")
 	private List<Flight> mPricedItineraries;
 	
+	/**
+	 * The return date time of the flight
+	 */
 	@SerializedName("ReturnDateTime")
 	private String mReturnDateTime;
 	
+	/**
+	 * The departure date time of the flight
+	 */
 	@SerializedName("DepartureDateTime")
 	private String mDepartureDateTime;
 	
+	/**
+	 * The destination location
+	 */
 	@SerializedName("DestinationLocation")
 	private String mDestinationLocation;
 	
+	/**
+	 * The origin location
+	 */
 	@SerializedName("OriginLocation")
 	private String mOriginLocation;
 	
+	/**
+	 * This constructor exists for when the origin and destination
+	 * cities are the same city, and the Flight response is to logically ignored
+	 * (cost $0USD, and give default date times for arrival and departure)
+	 */
 	public FlightResponse(String returnDateTime,
 			String departureDateTime, String destinationLocation,
 			String originLocation) {

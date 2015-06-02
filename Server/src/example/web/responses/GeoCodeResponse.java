@@ -6,8 +6,14 @@ import com.google.gson.annotations.SerializedName;
 
 import example.web.model.Geocode;
 
+/**
+ * The top-level POJO returned by the Google Geocode API
+ */
 public class GeoCodeResponse {
 	
+	/**
+	 * The Geocoding response
+	 */
 	@SerializedName("results")
 	private List<Geocode> mGeocodes;
 	
