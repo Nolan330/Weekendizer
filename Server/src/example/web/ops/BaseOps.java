@@ -51,7 +51,7 @@ public abstract class BaseOps<T> {
 		return new RestAdapter.Builder()
 			.setClient(new UrlConnectionClient())
 			.setEndpoint(mEndpoint)
-			.setLogLevel(LogLevel.FULL)
+			//.setLogLevel(LogLevel.FULL)
 			.build()
 			.create(serviceClass);
 	}

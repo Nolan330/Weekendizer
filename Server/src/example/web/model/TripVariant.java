@@ -13,9 +13,13 @@ public class TripVariant {
 	@SerializedName("schedule")
 	private List<Event> mSchedule;
 	
+	@SerializedName("places")
+	private List<List<Place>> mPlaces;
+	
 	public TripVariant(Double currentBudget) {
-		mSchedule = new ArrayList<Event>();
 		mCurrentBudget = currentBudget;
+		mSchedule = new ArrayList<Event>();
+		mPlaces = new ArrayList<List<Place>>();
 	}
 	
 	public List<Event> getSchedule() {
@@ -50,6 +54,10 @@ public class TripVariant {
 		return mSchedule.stream()
 			.anyMatch(schedEvent ->
 				schedEvent.getTitle().equalsIgnoreCase(e.getTitle()));
+	}
+	
+	public Boolean addPlaces(List<Place> places) {
+		return mPlaces.add(places);
 	}
 	
 	public Double getRemainingBudget() {

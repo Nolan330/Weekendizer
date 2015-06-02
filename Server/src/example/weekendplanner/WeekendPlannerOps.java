@@ -1,4 +1,4 @@
-package example.web.ops;
+package example.weekendplanner;
 
 import java.time.DayOfWeek;
 import java.util.List;
@@ -9,10 +9,13 @@ import java.util.concurrent.ThreadFactory;
 import java.util.stream.Collectors;
 
 import example.web.model.Weather;
+import example.web.ops.FlightOps;
+import example.web.ops.PlacesOps;
+import example.web.ops.TicketOps;
+import example.web.ops.WeatherOps;
 import example.web.requests.WeekendPlannerRequest;
 import example.web.responses.CityResponse;
 import example.web.responses.GeoCodeResponse;
-import example.web.responses.WeekendPlannerResponse;
 import example.web.responses.PlacesResponse;
 import example.web.utils.DateUtils;
 

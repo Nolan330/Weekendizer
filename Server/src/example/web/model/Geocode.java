@@ -5,14 +5,14 @@ import com.google.gson.annotations.SerializedName;
 public class Geocode {
 	
 	@SerializedName("geometry")
-	private Geometry mGeometry;
+	private Geometry mLocationCoords;
 	
 	public String getLat() {
-		return mGeometry.getLat();
+		return mLocationCoords.getLat();
 	}
 	
 	public String getLng() {
-		return mGeometry.getLng();
+		return mLocationCoords.getLng();
 	}
 	
 	public String toString() {

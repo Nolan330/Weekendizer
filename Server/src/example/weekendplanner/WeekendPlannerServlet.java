@@ -10,9 +10,10 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.google.gson.ExclusionStrategy;
+import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
 
-import example.web.ops.WeekendPlannerOps;
 import example.web.requests.WeekendPlannerRequest;
 
 /**
@@ -35,6 +36,20 @@ public class WeekendPlannerServlet extends HttpServlet {
         super();
         mGson = new Gson();
     }
+    
+    public class Exclusion implements ExclusionStrategy {
+
+		@Override
+		public boolean shouldSkipClass(Class<?> c) {
+			return false;
+		}
+
+		@Override
+		public boolean shouldSkipField(FieldAttributes fieldAttr) {
+			return fieldAttr.getDeclaringClass() == WeekendPlannerResponse.class && 
+					fieldAttr.getName().equals("mEventIt");
+		}
+    }
 
 	/**
 	 * @see Servlet#init(ServletConfig)
@@ -54,12 +69,8 @@ public class WeekendPlannerServlet extends HttpServlet {
 		WeekendPlannerOps wOps = new WeekendPlannerOps();
 		
 		wOps.getFlightAuthToken()
-		.thenComposeAsync(
-			authToken -> wOps.getCities(country, authToken),
-			wOps.getExecutor())
-		.thenAcceptAsync(
-			cities -> sendResponse(response, cities),
-			wOps.getExecutor())
+		.thenCompose(authToken -> wOps.getCities(country, authToken))
+		.thenAccept(cities -> sendResponse(response, cities))
 		.join();
 	}
 
@@ -90,25 +101,23 @@ public class WeekendPlannerServlet extends HttpServlet {
 		.thenCombine(
 			wOps.getGeocode(req.getDestinationCity().getName()),
 			wOps::fillWeekend)
-		.thenCompose(var -> var)
-//		.thenAcceptAsync(
-//			tripVariants -> sendResponse(response, tripVariants),
-//			wOps.getExecutor())
+		.thenCompose(trip ->
+			trip.thenAccept(respObj -> sendResponse(response, respObj)))
 		.join();
 		
 	}
 	
-	// if toJson needs a ".class" second parameter, could maybe use an object wrapper that calls this.class?
 	private <T> void sendResponse(HttpServletResponse response,
 								  T responseObj) {
+		System.out.println(responseObj);
 		String responseJson = mGson.toJson(responseObj);
+		response.setStatus(200);
 		response.setContentType("application/json");
 		response.setContentLength(responseJson.getBytes().length);
 		
 		try (PrintWriter pw = response.getWriter()) {
 			pw.write(responseJson);
 		} catch (IOException e) {
-			// try again?
 			e.printStackTrace();
 		}
 	}

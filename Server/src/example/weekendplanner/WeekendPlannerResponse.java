@@ -1,4 +1,4 @@
-package example.web.responses;
+package example.weekendplanner;
 
 import java.time.LocalDateTime;
 import java.util.Iterator;
@@ -14,6 +14,10 @@ import example.web.model.Event;
 import example.web.model.Flight;
 import example.web.model.TripVariant;
 import example.web.model.Weather;
+import example.web.responses.FlightResponse;
+import example.web.responses.PlacesResponse;
+import example.web.responses.TicketResponse;
+import example.web.responses.WeatherResponse;
 
 public class WeekendPlannerResponse {
 	
@@ -103,13 +107,14 @@ public class WeekendPlannerResponse {
 		return this;
 	}
 	
-	public WeekendPlannerResponse update(WeatherResponse weather) {
-		mWeather = weather.getWeekendWeather();
+	public WeekendPlannerResponse update(WeatherResponse response) {
+		mWeather = response.getWeekendWeather();
 		return this;
 	}
 	
 	public WeekendPlannerResponse update(PlacesResponse response) {
-		// fill appropriate day with random places from response
+		mTripVariants.stream()
+			.forEach(trip -> trip.addPlaces(response.getRandomPlaces()));
 		return this;
 	}
 	

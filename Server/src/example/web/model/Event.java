@@ -95,22 +95,39 @@ public class Event {
 	public String toString() {
 		return mTitle 
 			+ " at " + mStartDateTime
-			+ " for $" + getTicketPrice();
+			+ " for " + mTicketInfo
+			+ " located at " + mVenue;
 	}
 
-	@SuppressWarnings("unused")
 	public class Venue {
-		private String name;
-		private String timezone;
-		private String address1;
-		private String city;
-		private String state;
+		@SerializedName("name")
+		private String mName;
+		
+		@SerializedName("timezone")
+		private String mTimezone;
+		
+		@SerializedName("address1")
+		private String mStreetAddress;
+		
+		@SerializedName("city")
+		private String mCity;
+		
+		@SerializedName("state")
+		private String mState;
+		
+		@Override
+		public String toString() {
+			return mName + ", " 
+					+ mStreetAddress + " "
+					+ mCity + ", " 
+					+ mState;
+		}
 	}
 	
 	public class TicketInfo {
 		@SerializedName("minPrice")
 		private String mMinPrice;
-		
+
 		@SerializedName("currencyCode")
 		private String mCurrencyCode;
 		
@@ -122,12 +139,23 @@ public class Event {
 		public Double getPrice() {
 			return Double.valueOf(mMinPrice);
 		}
+		
+		@Override
+		public String toString() {
+			return "$" + mMinPrice + " " + mCurrencyCode;
+		}
 	}
 	
-	@SuppressWarnings("unused")
 	public class Category {
-		private String id;
-		private String name;
+		@SerializedName("id")
+		private String mCategoryId;
+		
+		@SerializedName("name")
+		private String mName;
+		
+		public String toString() {
+			return mName;
+		}
 	}
 
 }

@@ -11,7 +11,7 @@ public class Flight {
 	 */
 	@SerializedName("AirItinerary")
 	private AirItinerary mAirItinerary;
-	
+
 	@SerializedName("AirItineraryPricingInfo")
 	private AirItineraryPricingInfo mAirItineraryPricingInfo;
 	
@@ -44,7 +44,6 @@ public class Flight {
 	}
 	
 	private class AirItinerary {
-		
 		@SerializedName("OriginDestinationOptions")
 		private OriginDestinationOptions mOriginDestinationOptions;
 		
@@ -70,7 +69,6 @@ public class Flight {
 	}
 	
 	private class OriginDestinationOptions {
-		
 		@SerializedName("OriginDestinationOption")
 		private List<FlightSegment> mOriginDestinationOption;
 		
@@ -106,7 +104,6 @@ public class Flight {
 	}
 	
 	private class FlightSegment {
-		
 		@SerializedName("FlightSegment")
 		private List<Segment> mFlightSegment;
 		
@@ -141,7 +138,6 @@ public class Flight {
 	}
 	
 	private class Segment {
-		
 		@SerializedName("DepartureAirport")
 		private Airport mDepartureAirport;
 		
@@ -159,7 +155,7 @@ public class Flight {
 		
 		@SerializedName("FlightNumber")
 		private Integer mFlightNumber;
-		
+	
 		@SerializedName("OperatingAirline")
 		private Airline mOperatingAirline;
 		
@@ -183,7 +179,6 @@ public class Flight {
 	}
 	
 	private class Airport {
-		
 		@SerializedName("LocationCode")
 		private String mLocationCode;
 		
@@ -193,7 +188,6 @@ public class Flight {
 	}
 	
 	private class Airline {
-		
 		@SerializedName("Code")
 		private String mCode;
 		
@@ -203,7 +197,6 @@ public class Flight {
 	}
 	
 	private class AirItineraryPricingInfo {
-		
 		@SerializedName("ItinTotalFare")
 		private ItinTotalFare mItinTotalFare;
 		
@@ -221,7 +214,6 @@ public class Flight {
 	}
 	
 	private class ItinTotalFare {
-		
 		@SerializedName("TotalFare")
 		private Fare mTotalFare;
 		
@@ -239,7 +231,6 @@ public class Flight {
 	}
 	
 	private class Fare {
-		
 		@SerializedName("Amount")
 		private String mAmount;
 		
