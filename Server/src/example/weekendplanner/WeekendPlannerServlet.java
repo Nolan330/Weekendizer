@@ -65,9 +65,10 @@ public class WeekendPlannerServlet extends HttpServlet {
 		wOps.getFlightAuthToken()
 		// Then get the available cities for flights from the Sabre cities API
 		.thenCompose(authToken -> wOps.getCities(country, authToken))
-		// Then send the list of available cities to the client to populate
-		// the drop down lists
-		.thenAccept(cities -> sendResponse(response, cities))
+		// Finally send the list of available cities to the client or
+		// an exception object if either the authorization or city query failed
+		.handle((success, exception) -> 
+			completionOrError(response, success, exception))
 		.join();
 	}
 
@@ -113,18 +114,29 @@ public class WeekendPlannerServlet extends HttpServlet {
 		.thenCombine(
 			wOps.getGeocode(req.getDestinationCity().getName()),
 			wOps::fillWeekend)
-		// Finally, send the response to the client as soon as it's completed
+		// Finally, send the WeekendPlannerResponse to the client,
+		// or the exception object if the computation failed at any point
 		.thenCompose(trip ->
-			trip.thenAccept(respObj -> sendResponse(response, respObj)))
+			trip.handle((success, exception) ->
+				completionOrError(response, success, exception)))
 		.join();
-		
+	}
+	
+	/**
+	 * 
+	 */
+	private <T> Boolean completionOrError(HttpServletResponse response,
+			T responseObj, Throwable exception) {
+		return responseObj != null ?
+			sendResponse(response, responseObj) :
+			sendResponse(response, exception);
 	}
 	
 	/**
 	 * Generic method for sending a response object JSON to the client
 	 */
-	private <T> void sendResponse(HttpServletResponse response,
-								  T responseObj) {
+	private <T> Boolean sendResponse(HttpServletResponse response,
+			T responseObj) {
 		String responseJson = mGson.toJson(responseObj);
 		System.out.println("Sending response to client: " + responseJson);
 		response.setStatus(200);
@@ -133,8 +145,10 @@ public class WeekendPlannerServlet extends HttpServlet {
 		
 		try (PrintWriter pw = response.getWriter()) {
 			pw.write(responseJson);
+			return true;
 		} catch (IOException e) {
 			e.printStackTrace();
+			return false;
 		}
 	}
 	
