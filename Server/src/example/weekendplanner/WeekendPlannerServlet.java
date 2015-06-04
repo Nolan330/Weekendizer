@@ -110,7 +110,7 @@ public class WeekendPlannerServlet extends HttpServlet {
 		// The above nested composition returns a flat
 		// CompletableFuture, so combine it the geocode (lat, lng) of the
 		// destination city to fill the weekend with fun places that
-		// don't require tickets, from the Google Places API
+		// don't require tickets from the Google Places API
 		.thenCombine(
 			wOps.getGeocode(req.getDestinationCity().getName()),
 			wOps::fillWeekend)

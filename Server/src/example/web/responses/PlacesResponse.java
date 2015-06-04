@@ -1,6 +1,8 @@
 package example.web.responses;
 
 import java.util.List;
+import java.util.Random;
+import java.util.stream.Collectors;
 
 import com.google.gson.annotations.SerializedName;
 
@@ -27,10 +29,12 @@ public class PlacesResponse {
 	}
 	
 	/**
-	 * Selects NUM_PLACES places at random
+	 * Selects and returns NUM_PLACES places at random in a list
 	 */
 	public List<Place> getRandomPlaces() {
-		return mPlaces.subList(0, NUM_PLACES);
+		return new Random().ints(NUM_PLACES, 0, mPlaces.size() - 1)
+			.mapToObj(mPlaces::get)
+			.collect(Collectors.toList());
 	}
 	
 }
