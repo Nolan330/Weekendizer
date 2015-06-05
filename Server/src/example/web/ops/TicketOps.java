@@ -1,5 +1,6 @@
 package example.web.ops;
 
+import retrofit.RetrofitError;
 import example.web.responses.OAuth2TokenResponse;
 import example.web.responses.TicketResponse;
 import example.web.services.TicketService;
@@ -32,7 +33,7 @@ public class TicketOps extends BaseOps<TicketService> {
 	 */
 	@Override
 	protected OAuth2TokenResponse authorize() {
-		System.out.println("TicketOps::authorize - " + System.currentTimeMillis());
+		logExecutionTime("TicketOps::authorize");
 		return new OAuth2TokenResponse(
 			mAuthUtils.makeCredential(BaseOAuth2Utils.APP_TOKEN));
 	}
@@ -44,16 +45,23 @@ public class TicketOps extends BaseOps<TicketService> {
 	 */
 	public TicketResponse getTickets(String authToken,
 			String dateTimeRange, String city, String maxPrice) {
-		System.out.println("TicketOps::getTickets - " + System.currentTimeMillis());
-		return mService.queryTickets(
-			authToken,
-			dateTimeRange,
-			city,
-			maxPrice,
-			MIN_AVAILABLE,
-			FIELD_LIST,
-			SORT,
-			LIMIT);
+		logExecutionTime("TicketOps::getTickets");
+		try {
+			return mService.queryTickets(
+				authToken,
+				dateTimeRange,
+				city,
+				maxPrice,
+				MIN_AVAILABLE,
+				FIELD_LIST,
+				SORT,
+				LIMIT);
+		} catch (RetrofitError e) {
+			throw new RuntimeException(
+				"Error getting tickets: "
+				+ "There are likely no event postings this weekend in "
+				+ city);
+		}
 	}
 
 }

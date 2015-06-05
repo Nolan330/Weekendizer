@@ -6,9 +6,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
+import com.squareup.okhttp.OkHttpClient;
+
 import retrofit.RestAdapter;
 import retrofit.RestAdapter.LogLevel;
 import retrofit.android.AndroidLog;
+import retrofit.client.OkClient;
 import retrofit.client.Request;
 import retrofit.client.UrlConnectionClient;
 import android.app.AlertDialog;
@@ -22,6 +25,7 @@ import android.view.View.OnClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.Toast;
 import example.web.model.City;
@@ -51,9 +55,11 @@ public class PromptFragment extends Fragment
 	/**
 	 * Cached references to relevant UI widgets
 	 */
-	private Spinner mCurrentCityPrompt;
+	private Spinner mOriginCityPrompt;
 	private Spinner mDestinationCityPrompt;
+	private LinearLayout mDestinationLayout;
 	private EditText mBudgetPrompt;
+	
 	private Button mEnterDestinationButton;
 	private Button mRemoveDestinationButton;
 	private Button mWeekendizeButton;
@@ -79,11 +85,14 @@ public class PromptFragment extends Fragment
         mAlertDialog = 
 			new AlertDialog.Builder(getActivity()).create();
 
-		mCurrentCityPrompt =
-			(Spinner) rootView.findViewById(R.id.currentCityPrompt);
+		mOriginCityPrompt =
+			(Spinner) rootView.findViewById(R.id.originCityPrompt);
 		
 		mDestinationCityPrompt = 
 			(Spinner) rootView.findViewById(R.id.destinationCityPrompt);
+		
+		mDestinationLayout =
+			(LinearLayout) rootView.findViewById(R.id.destinationCity);
 		
 		mBudgetPrompt = 
 			(EditText) rootView.findViewById(R.id.budgetPrompt);
@@ -100,16 +109,17 @@ public class PromptFragment extends Fragment
 			(Button) rootView.findViewById(R.id.weekendize);
 		mWeekendizeButton.setOnClickListener(this);
 
-		
+		OkHttpClient client = new OkHttpClient();
 		RestAdapter weekendPlannerAdapter =
     		new RestAdapter.Builder()
-				.setClient(new ExtendedTimeoutUrlConnectionClient())
+				.setClient(new OkClient(client))
 				.setLogLevel(LogLevel.FULL)
 				.setLog(new AndroidLog("MYREQUESTS"))
 				.setEndpoint("http://10.0.3.2:8080/WeekendPlanner/")
 				.build();
         
-        mWeekendPlannerService = weekendPlannerAdapter.create(WeekendPlannerService.class);
+        mWeekendPlannerService =
+        	weekendPlannerAdapter.create(WeekendPlannerService.class);
         
         mCities = new HashMap<String, City>();
         
@@ -126,8 +136,6 @@ public class PromptFragment extends Fragment
 	public void onClick(View v) {
 		switch(v.getId()) {
 		case R.id.enterDestination:
-			toggleVisibility();
-			break;
 		case R.id.removeDestination:
 			toggleVisibility();
 			break;
@@ -139,8 +147,8 @@ public class PromptFragment extends Fragment
 	}
 	
 	private void toggleVisibility() {
-		mDestinationCityPrompt.setVisibility(
-			mDestinationCityPrompt.getVisibility() == View.GONE ?
+		mDestinationLayout.setVisibility(
+			mDestinationLayout.getVisibility() == View.GONE ?
 				View.VISIBLE : View.GONE);
 		
 		mEnterDestinationButton.setVisibility(
@@ -202,11 +210,11 @@ public class PromptFragment extends Fragment
 		
 		private City getOrigin() {
 			return mCities.get(
-				mCurrentCityPrompt.getSelectedItem().toString());
+				mOriginCityPrompt.getSelectedItem().toString());
 		}
 		
 		private City getDestination() {
-			return mDestinationCityPrompt.getVisibility() == View.GONE ?
+			return mDestinationLayout.getVisibility() == View.GONE ?
 				mCities.get(
 					mDestinationCityPrompt.getItemAtPosition(
 						new Random().nextInt(mCities.size())).toString())
@@ -256,7 +264,7 @@ public class PromptFragment extends Fragment
 			cityAdapter.setDropDownViewResource(
 				android.R.layout.simple_spinner_dropdown_item);
 			
-			mCurrentCityPrompt.setAdapter(cityAdapter);
+			mOriginCityPrompt.setAdapter(cityAdapter);
 			mDestinationCityPrompt.setAdapter(cityAdapter);
 						
 			mAlertDialog.cancel();
@@ -264,23 +272,9 @@ public class PromptFragment extends Fragment
     }
     
     /**
-     *  Tailors the URLConnectionClient to remain open while the server
-     *  completes processing
+     * Shows a dialog to the user, indicating that a long
+     * running background operation is in progress
      */
-    private class ExtendedTimeoutUrlConnectionClient 
-    									extends UrlConnectionClient {
-    	private final int WAIT_TIME = 30 * 1000;
-    	
-    	@Override 
-    	protected HttpURLConnection openConnection(Request request) 
-    			throws IOException {
-    		HttpURLConnection connection = super.openConnection(request);
-		    connection.setConnectTimeout(WAIT_TIME);
-		    connection.setReadTimeout(WAIT_TIME);
-		    return connection;
-    	}
-    }
-    
     private void showDialog(String title, String msg) {
     	mAlertDialog.setTitle(title);
 		mAlertDialog.setMessage(msg);

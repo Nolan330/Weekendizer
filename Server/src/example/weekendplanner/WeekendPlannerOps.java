@@ -124,6 +124,15 @@ public class WeekendPlannerOps {
 	}
 	
 	/**
+	 * Return a token that will authorize requests to the StubHub API
+	 */
+	public CompletableFuture<String> getTicketAuthToken() {
+		return CompletableFuture.supplyAsync(
+			() -> mTicketOps.getAuthToken(),
+			getExecutor());
+	}
+	
+	/**
 	 * Get the available cities for which flights may exist
 	 * according to the Sabre Cities API
 	 */
@@ -137,8 +146,9 @@ public class WeekendPlannerOps {
 	/**
 	 * Get flight information from the Sabre Flights API for the
 	 * appropriate dates between the given origin and destination
+	 * @throws Exception 
 	 */
-	public CompletableFuture<WeekendPlannerResponse> getFlight(
+	public WeekendPlannerResponse getFlight(
 			WeekendPlannerResponse tripVariants, String authToken) {
 		return CompletableFuture.supplyAsync(
 				() -> mFlightOps.getFlight(
@@ -149,23 +159,15 @@ public class WeekendPlannerOps {
 					DateUtils.getFormattedDateOfNext(DayOfWeek.SUNDAY),
 					String.valueOf(tripVariants.getInitialBudget())),
 				getExecutor())
-			.thenApply(tripVariants::update);
-	}
-	
-	/**
-	 * Return a token that will authorize requests to the StubHub API
-	 */
-	public CompletableFuture<String> getTicketAuthToken() {
-		return CompletableFuture.supplyAsync(
-			() -> mTicketOps.getAuthToken(),
-			getExecutor());
+			.thenApply(tripVariants::update)
+			.join();
 	}
 	
 	/**
 	 * Return tickets to relevant events going on in the destiantion city
 	 * on the appropriate weekend
 	 */
-	public CompletableFuture<WeekendPlannerResponse> getTickets(
+	public WeekendPlannerResponse getTickets(
 			WeekendPlannerResponse tripVariants, String authToken) {
 		// These methods will return a server throttle error because requests are made
 		// too quickly
@@ -199,7 +201,8 @@ public class WeekendPlannerOps {
 					tripVariants.getDestinationCityName(),
 					String.valueOf(tripVariants.getBudgetAfterFlight())),
 				getExecutor())
-			.thenApply(tripVariants::update);
+			.thenApply(tripVariants::update)
+			.join();
 	}
 	
 	/**
@@ -233,7 +236,7 @@ public class WeekendPlannerOps {
 	 * Fill the weekend with generally free or inexpensive activities
 	 * tailored to the weather on the given day
 	 */
-	public CompletableFuture<WeekendPlannerResponse> fillWeekend(
+	public WeekendPlannerResponse fillWeekend(
 			WeekendPlannerResponse tripVariants, GeoCodeResponse geocode) {
 		// Here, the server handles quotas differently, and the server is able to
 		// handle concurrent day-level requests
@@ -245,10 +248,10 @@ public class WeekendPlannerOps {
 		// When each places request returns, update the response
 		responses.stream()
 			.map(CompletableFuture::join)
+			.filter(place -> place != null)
 			.forEach(tripVariants::update);
 
-		// Return the updated response, which is completed because of join()
-		return CompletableFuture.completedFuture(tripVariants);
+		return tripVariants;
 	}
 	
 	/**

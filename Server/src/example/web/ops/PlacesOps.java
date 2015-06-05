@@ -3,6 +3,7 @@ package example.web.ops;
 import java.util.Arrays;
 import java.util.List;
 
+import retrofit.RetrofitError;
 import example.web.model.Weather;
 import example.web.responses.GeoCodeResponse;
 import example.web.responses.OAuth2TokenResponse;
@@ -48,7 +49,7 @@ public class PlacesOps extends BaseOps<PlacesService> {
 	 */
 	@Override
 	protected OAuth2TokenResponse authorize() {
-		System.out.println("PlacesOps::authorize - " + System.currentTimeMillis());
+		logExecutionTime("PlacesOps::authorize");
 		return new OAuth2TokenResponse(
 			mAuthUtils.makeCredential(BaseOAuth2Utils.APP_TOKEN));
 	}
@@ -60,23 +61,35 @@ public class PlacesOps extends BaseOps<PlacesService> {
 	 */
 	public PlacesResponse getPlaces(String authToken,
 			String lat, String lng, Weather weather) {
-		System.out.println("PlacesOps::getPlaces - " + System.currentTimeMillis());
-		return mService.queryPlaces(
-			authToken,
-			lat + "," + lng,
-			RADIUS_METERS,
-			OUTDOOR_CONDITIONS.contains(weather.getDayCondition()) ?
-				OUTDOOR_PLACES : INDOOR_PLACES);
+		logExecutionTime("PlacesOps::getPlaces");
+		try {
+			return mService.queryPlaces(
+				authToken,
+				lat + "," + lng,
+				RADIUS_METERS,
+				OUTDOOR_CONDITIONS.contains(weather.getDayCondition()) ?
+					OUTDOOR_PLACES : INDOOR_PLACES);
+		} catch (RetrofitError e) {
+			throw new RuntimeException(
+				"Error getting places: "
+				+ "The service is likely down");
+		}
 	}
 	
 	/**
 	 * Queries the API for the lat, lng coodrinates of a given city
 	 */
 	public GeoCodeResponse getGeocode(String authToken, String city) {
-		System.out.println("PlacesOps::getGeocode - " + System.currentTimeMillis());
-		return mService.queryGeocode(
-			authToken,
-			city);
+		logExecutionTime("PlacesOps::getGeocode");
+		try {
+			return mService.queryGeocode(
+				authToken,
+				city);
+		} catch (RetrofitError e) {
+			throw new RuntimeException(
+				"Error getting geocode: "
+				+ "The service is likely down");
+		}
 	}
 
 }

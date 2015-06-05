@@ -10,6 +10,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.catalina.connector.Response;
+
 import com.google.gson.Gson;
 
 import example.web.requests.WeekendPlannerRequest;
@@ -98,15 +100,13 @@ public class WeekendPlannerServlet extends HttpServlet {
 		// Then do the same for ticket operations from the StubHub API,
 		// only we must compose this operation because getFlight
 		// returns a nested CompletableFuture
-		.thenCompose(trip->
-			trip.thenCombine(
-				wOps.getTicketAuthToken(),
-				wOps::getTickets))
+		.thenCombine(
+			wOps.getTicketAuthToken(),
+			wOps::getTickets)
 		// Then retrieve the weather for the weekend from the 
 		// OpenWeatherMap API, again composing the operation because 
 		// getTickets returns a nested CompletableFuture
-		.thenCompose(trip ->
-			trip.thenCompose(wOps::getWeather))
+		.thenCompose(wOps::getWeather)
 		// The above nested composition returns a flat
 		// CompletableFuture, so combine it the geocode (lat, lng) of the
 		// destination city to fill the weekend with fun places that
@@ -116,9 +116,8 @@ public class WeekendPlannerServlet extends HttpServlet {
 			wOps::fillWeekend)
 		// Finally, send the WeekendPlannerResponse to the client,
 		// or the exception object if the computation failed at any point
-		.thenCompose(trip ->
-			trip.handle((success, exception) ->
-				completionOrError(response, success, exception)))
+		.handle((success, exception) ->
+			completionOrError(response, success, exception))
 		.join();
 	}
 	
@@ -127,19 +126,20 @@ public class WeekendPlannerServlet extends HttpServlet {
 	 */
 	private <T> Boolean completionOrError(HttpServletResponse response,
 			T responseObj, Throwable exception) {
-		return responseObj != null ?
-			sendResponse(response, responseObj) :
-			sendResponse(response, exception);
+		return exception == null ?
+			sendResponse(response, responseObj, Response.SC_OK) :
+			sendResponse(response, exception.getMessage(),
+				Response.SC_BAD_REQUEST);
 	}
 	
 	/**
 	 * Generic method for sending a response object JSON to the client
 	 */
 	private <T> Boolean sendResponse(HttpServletResponse response,
-			T responseObj) {
+			T responseObj, Integer status) {
 		String responseJson = mGson.toJson(responseObj);
 		System.out.println("Sending response to client: " + responseJson);
-		response.setStatus(200);
+		response.setStatus(status);
 		response.setContentType("application/json");
 		response.setContentLength(responseJson.getBytes().length);
 		

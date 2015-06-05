@@ -1,5 +1,6 @@
 package example.web.ops;
 
+import retrofit.RetrofitError;
 import example.web.responses.OAuth2TokenResponse;
 import example.web.responses.WeatherResponse;
 import example.web.services.WeatherService;
@@ -26,7 +27,7 @@ public class WeatherOps extends BaseOps<WeatherService> {
 	 */
 	@Override
 	protected OAuth2TokenResponse authorize() {
-		System.out.println("WeatherOps::authorize - " + System.currentTimeMillis());
+		logExecutionTime("WeatherOps::authorize");
 		// no-op for non-authorized APIs
 		return null;
 	}
@@ -37,11 +38,17 @@ public class WeatherOps extends BaseOps<WeatherService> {
 	 */
 	public WeatherResponse getWeather(String city, Integer dayCount) {
 		System.out.println("WeatherOps::getWeather - " + System.currentTimeMillis());
-		return mService.queryWeather(
-			city,
-			dayCount,
-			UNITS,
-			RESPONSE_MODE);
+		try {
+			return mService.queryWeather(
+				city,
+				dayCount,
+				UNITS,
+				RESPONSE_MODE);
+		} catch (RetrofitError e) {
+			throw new RuntimeException(
+				"Error getting weather: "
+				+ "The service is likely down");
+		}
 	}
 
 }

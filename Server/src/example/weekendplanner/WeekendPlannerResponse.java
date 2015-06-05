@@ -172,12 +172,6 @@ public class WeekendPlannerResponse {
 		return this;
 	}
 	
-	public WeekendPlannerResponse update(PlacesResponse resp1, PlacesResponse resp2) {
-		mTripVariants.stream()
-			.forEach(trip -> trip.addPlaces(resp1.getRandomPlaces()));
-		return this;
-	}
-	
 	public String toString() {
 		String variants = "";
 		for(TripVariant tv : mTripVariants) {

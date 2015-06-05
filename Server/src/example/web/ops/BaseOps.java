@@ -74,9 +74,14 @@ public abstract class BaseOps<T> {
 		return new RestAdapter.Builder()
 			.setClient(new UrlConnectionClient())
 			.setEndpoint(mEndpoint)
-			//.setLogLevel(LogLevel.FULL)
+			//S.setLogLevel(LogLevel.FULL)
 			.build()
 			.create(serviceClass);
+	}
+	
+	protected void logExecutionTime(String method) {
+		System.out.println(method + " - "
+			+ System.currentTimeMillis() % 100000);
 	}
 
 }

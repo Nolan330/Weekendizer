@@ -22,16 +22,10 @@ public class FlightResponse {
 	private List<Flight> mPricedItineraries;
 	
 	/**
-	 * The return date time of the flight
+	 * The origin location
 	 */
-	@SerializedName("ReturnDateTime")
-	private String mReturnDateTime;
-	
-	/**
-	 * The departure date time of the flight
-	 */
-	@SerializedName("DepartureDateTime")
-	private String mDepartureDateTime;
+	@SerializedName("OriginLocation")
+	private String mOriginLocation;
 	
 	/**
 	 * The destination location
@@ -40,24 +34,30 @@ public class FlightResponse {
 	private String mDestinationLocation;
 	
 	/**
-	 * The origin location
+	 * The departure date time of the flight
 	 */
-	@SerializedName("OriginLocation")
-	private String mOriginLocation;
+	@SerializedName("DepartureDateTime")
+	private String mDepartureDate;
+	
+	/**
+	 * The return date time of the flight
+	 */
+	@SerializedName("ReturnDateTime")
+	private String mReturnDate;
 	
 	/**
 	 * This constructor exists for when the origin and destination
 	 * cities are the same city, and the Flight response is to logically ignored
 	 * (cost $0USD, and give default date times for arrival and departure)
 	 */
-	public FlightResponse(String returnDateTime,
-			String departureDateTime, String destinationLocation,
-			String originLocation) {
-		mPricedItineraries = Arrays.asList(new Flight());
-		mReturnDateTime = returnDateTime;
-		mDepartureDateTime = departureDateTime;
+	public FlightResponse(String originLocation, String destinationLocation,
+			String departureDate, String returnDate) {
+		mPricedItineraries =
+			Arrays.asList(new Flight(departureDate, returnDate));
 		mDestinationLocation = destinationLocation;
 		mOriginLocation = originLocation;
+		mDepartureDate = departureDate;
+		mReturnDate = returnDate;
 	}
 	
 	public Double getFare() {
@@ -65,7 +65,7 @@ public class FlightResponse {
 	}
 	
 	public LocalDate getDepartureDate() {
-		return LocalDate.parse(mDepartureDateTime);
+		return LocalDate.parse(mDepartureDate);
 	}
 	
 	public LocalDateTime getDepartingDepartureDateTime() {
@@ -79,7 +79,7 @@ public class FlightResponse {
 	}
 
 	public LocalDate getReturnDate() {
-		return LocalDate.parse(mReturnDateTime);
+		return LocalDate.parse(mReturnDate);
 	}
 	
 	public LocalDateTime getReturningDepartureDateTime() {
@@ -102,9 +102,9 @@ public class FlightResponse {
 			flightItin += "\n" + f.toString();
 		}
 		return "Depart from " + mOriginLocation
-				+ " on " + mDepartureDateTime
+				+ " on " + mDepartureDate
 				+ "\nto " + mDestinationLocation
-				+ ", returing on " + mReturnDateTime 
+				+ ", returing on " + mReturnDate 
 				+ " by " + flightItin;
 	}
 	

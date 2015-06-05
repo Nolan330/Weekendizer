@@ -1,5 +1,8 @@
 package example.web.model;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.List;
 
 import com.google.gson.annotations.SerializedName;
@@ -21,6 +24,11 @@ public class Flight {
 	 */
 	@SerializedName("AirItineraryPricingInfo")
 	private AirItineraryPricingInfo mAirItineraryPricingInfo;
+	
+	public Flight(String departureDate, String returnDate) {
+		mAirItinerary = new AirItinerary(departureDate, returnDate);
+		mAirItineraryPricingInfo = new AirItineraryPricingInfo();
+	}
 	
 	public Double getFare() {
 		return mAirItineraryPricingInfo.getFare();
@@ -57,6 +65,11 @@ public class Flight {
 		@SerializedName("OriginDestinationOptions")
 		private OriginDestinationOptions mOriginDestinationOptions;
 		
+		public AirItinerary(String departureDate, String returnDate) {
+			mOriginDestinationOptions =
+				new OriginDestinationOptions(departureDate, returnDate);
+		}
+		
 		public String getDepartingDepartureDateTime() {
 			return mOriginDestinationOptions.getDepartingDepartureDateTime();
 		}
@@ -84,6 +97,12 @@ public class Flight {
 	private class OriginDestinationOptions {
 		@SerializedName("OriginDestinationOption")
 		private List<FlightSegment> mOriginDestinationOption;
+		
+		public OriginDestinationOptions(
+			String departureDate, String returnDate) {
+			mOriginDestinationOption =
+				Arrays.asList(new FlightSegment(departureDate, returnDate));
+		}
 		
 		public String getDepartingDepartureDateTime() {
 			return mOriginDestinationOption.get(0)
@@ -125,6 +144,14 @@ public class Flight {
 		
 		@SerializedName("ElapsedTime")
 		private Integer mElapsedTime;
+		
+		public FlightSegment(String departureDate, String returnDate) {
+			mFlightSegment =
+				Arrays.asList(
+					new Segment(departureDate),
+					new Segment(returnDate));
+			mElapsedTime = 0;
+		}
 		
 		public String getDepartingDepartureDateTime() {
 			return mFlightSegment.get(0).getDepartureDateTime();
@@ -178,6 +205,16 @@ public class Flight {
 		@SerializedName("OperatingAirline")
 		private Airline mOperatingAirline;
 		
+		public Segment(String departureDate) {
+			mElapsedTime = 0;
+			mDepartureDateTime =
+				LocalDate.parse(departureDate).atTime(12, 00)
+					.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+			mArrivalDateTime =
+				LocalDate.parse(departureDate).atTime(12, 00)
+					.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+		}
+		
 		public String getArrivalDateTime() {
 			return mArrivalDateTime;
 		}
@@ -219,6 +256,10 @@ public class Flight {
 		@SerializedName("ItinTotalFare")
 		private ItinTotalFare mItinTotalFare;
 		
+		public AirItineraryPricingInfo() {
+			mItinTotalFare = new ItinTotalFare();
+		}
+		
 		public Double getFare() {
 			return mItinTotalFare.getFare();
 		}
@@ -235,6 +276,10 @@ public class Flight {
 	private class ItinTotalFare {
 		@SerializedName("TotalFare")
 		private Fare mTotalFare;
+		
+		public ItinTotalFare() {
+			mTotalFare = new Fare();
+		}
 		
 		public Double getFare() {
 			return mTotalFare.getAmount();
@@ -255,6 +300,11 @@ public class Flight {
 		
 		@SerializedName("CurrencyCode")
 		private String mCurrencyCode;
+		
+		public Fare() {
+			mAmount = "0.0";
+			mCurrencyCode = "USD";
+		}
 		
 		public Double getAmount() {
 			return Double.valueOf(mAmount);
