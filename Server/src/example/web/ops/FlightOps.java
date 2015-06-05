@@ -32,9 +32,17 @@ public class FlightOps extends BaseOps<FlightService> {
 	@Override
 	protected OAuth2TokenResponse authorize() { 
 		logExecutionTime("FlightOps::authorize");
-		return mService.authorize(
-			mAuthUtils.makeCredential(BaseOAuth2Utils.USER_TOKEN),
-			mAuthUtils.getGrantType());
+		try {
+			return mService.authorize(
+				mAuthUtils.makeCredential(BaseOAuth2Utils.USER_TOKEN),
+				mAuthUtils.getGrantType());
+		} catch (RetrofitError e) {
+			// Catch and further detail the Retrofit error
+			throw new RuntimeException(
+				"Server Error authorizing the flight request:"
+				+ "The server is likely down, "
+				+ "or the credentials are invalid");
+		}
 	}
 	
 	/**
@@ -49,6 +57,7 @@ public class FlightOps extends BaseOps<FlightService> {
 				authToken,
 				country);
 		} catch (RetrofitError e) {
+			// Catch and further detail the Retrofit error
 			throw new RuntimeException(
 				"Error getting cities: The server is likely down");
 		}
@@ -80,6 +89,7 @@ public class FlightOps extends BaseOps<FlightService> {
 					FLIGHT_RETURN_WINDOW,
 					LIMIT_RESPONSES);
 		} catch (RetrofitError e) {
+			// Catch and further detail the Retrofit error
 			throw new RuntimeException(
 				"Error getting flights: "
 				+ "There are likely no available flights for those cities");

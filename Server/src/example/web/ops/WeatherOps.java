@@ -37,7 +37,7 @@ public class WeatherOps extends BaseOps<WeatherService> {
 	 * for the weather forecast
 	 */
 	public WeatherResponse getWeather(String city, Integer dayCount) {
-		System.out.println("WeatherOps::getWeather - " + System.currentTimeMillis());
+		logExecutionTime("WeatherOps::getWeather");
 		try {
 			return mService.queryWeather(
 				city,
@@ -45,6 +45,7 @@ public class WeatherOps extends BaseOps<WeatherService> {
 				UNITS,
 				RESPONSE_MODE);
 		} catch (RetrofitError e) {
+			// Catch and further detail the Retrofit error
 			throw new RuntimeException(
 				"Error getting weather: "
 				+ "The service is likely down");

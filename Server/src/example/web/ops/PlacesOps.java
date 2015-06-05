@@ -70,6 +70,7 @@ public class PlacesOps extends BaseOps<PlacesService> {
 				OUTDOOR_CONDITIONS.contains(weather.getDayCondition()) ?
 					OUTDOOR_PLACES : INDOOR_PLACES);
 		} catch (RetrofitError e) {
+			// Catch and further detail the Retrofit error
 			throw new RuntimeException(
 				"Error getting places: "
 				+ "The service is likely down");
@@ -86,6 +87,7 @@ public class PlacesOps extends BaseOps<PlacesService> {
 				authToken,
 				city);
 		} catch (RetrofitError e) {
+			// Catch and further detail the Retrofit error
 			throw new RuntimeException(
 				"Error getting geocode: "
 				+ "The service is likely down");

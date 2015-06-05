@@ -122,7 +122,7 @@ public class WeekendPlannerServlet extends HttpServlet {
 	}
 	
 	/**
-	 * 
+	 * Sends either the response or the error back to the client
 	 */
 	private <T> Boolean completionOrError(HttpServletResponse response,
 			T responseObj, Throwable exception) {

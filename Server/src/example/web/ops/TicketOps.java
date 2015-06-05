@@ -57,6 +57,7 @@ public class TicketOps extends BaseOps<TicketService> {
 				SORT,
 				LIMIT);
 		} catch (RetrofitError e) {
+			// Catch and further detail the Retrofit error
 			throw new RuntimeException(
 				"Error getting tickets: "
 				+ "There are likely no event postings this weekend in "
