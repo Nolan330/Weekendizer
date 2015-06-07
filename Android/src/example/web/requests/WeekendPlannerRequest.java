@@ -1,27 +1,59 @@
 package example.web.requests;
 
+import com.google.gson.annotations.SerializedName;
+
 import example.web.model.City;
 
+/**
+ * The POJO representing the request from the client
+ */
 public class WeekendPlannerRequest {
 	
-	public String budget;
-	public City currentCity;
-	public City destinationCity;
+	/**
+	 * The initial budget given by the user
+	 */
+	@SerializedName("budget")
+	private String mBudget;
 	
-	public WeekendPlannerRequest(String b, City curCity, City destCity) {
-		budget = b;
-		currentCity = curCity;
-		destinationCity = destCity;
+	/**
+	 * The current city of the user
+	 */
+	@SerializedName("currentCity")
+	private City mOriginCity;
+	
+	/**
+	 * The desired destination of the user
+	 */
+	@SerializedName("destinationCity")
+	private City mDestinationCity;
+	
+	public WeekendPlannerRequest(String budget, City origin,
+			City destination) {
+		mBudget = budget;
+		mOriginCity = origin;
+		mDestinationCity = destination;
+	}
+	
+	public Double getBudget() {
+		return Double.valueOf(mBudget);
+	}
+	
+	public City getOriginCity() {
+		return mOriginCity;
+	}
+	
+	public City getDestinationCity() {
+		return mDestinationCity;
 	}
 	
 	public String toString() {
-		return "{budget: " + budget 
+		return "{budget: " + mBudget 
 				+ ", curCity: "
-				+ currentCity.name + " (" + currentCity.code + ")"
+				+ mOriginCity.getName() + " (" + mOriginCity.getCode() + ")"
 				+ ", destCity: "
-				+ (destinationCity == null ? 
+				+ (mDestinationCity == null ? 
 					"null" :
-					destinationCity.name + " (" + destinationCity.code + ")")
+					mDestinationCity.getName() + " (" + mDestinationCity.getCode() + ")")
 				+ "}";
 	}
 

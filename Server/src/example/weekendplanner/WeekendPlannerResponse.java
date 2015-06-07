@@ -133,6 +133,8 @@ public class WeekendPlannerResponse {
 	 */
 	public WeekendPlannerResponse update(FlightResponse response) {
 		mFlight = response.getFlight();
+		mTripVariants.forEach(trip ->
+			trip.subtractFromBudget(response.getFare()));
 		return this;
 	}
 	
@@ -142,14 +144,16 @@ public class WeekendPlannerResponse {
 	 */
 	public WeekendPlannerResponse update(TicketResponse response) {
 		mEventIt = mTripVariants.iterator();
-		response.getEvents().stream()
-			.distinct()
-			.forEach(event -> {
-				if (mEventIt.hasNext()) 
-					mEventIt.next().addEvent(event);
-				else
-					mEventIt = mTripVariants.iterator();
-			});
+		if (response.getEvents() != null) {
+			response.getEvents().stream()
+				.distinct()
+				.forEach(event -> {
+					if (mEventIt.hasNext()) 
+						mEventIt.next().addEvent(event);
+					else
+						mEventIt = mTripVariants.iterator();
+				});
+		}
 		return this;
 	}
 	
@@ -167,7 +171,7 @@ public class WeekendPlannerResponse {
 	 * to each trip variant and return the updated response
 	 */
 	public WeekendPlannerResponse update(PlacesResponse response) {
-		mTripVariants.stream()
+		mTripVariants
 			.forEach(trip -> trip.addPlaces(response.getRandomPlaces()));
 		return this;
 	}

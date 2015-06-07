@@ -1,7 +1,5 @@
 package example.fragments;
 
-import java.io.IOException;
-import java.net.HttpURLConnection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -12,8 +10,6 @@ import retrofit.RestAdapter;
 import retrofit.RestAdapter.LogLevel;
 import retrofit.android.AndroidLog;
 import retrofit.client.OkClient;
-import retrofit.client.Request;
-import retrofit.client.UrlConnectionClient;
 import android.app.AlertDialog;
 import android.app.Fragment;
 import android.os.AsyncTask;
@@ -187,13 +183,16 @@ public class PromptFragment extends Fragment
 
 		@Override
 		protected WeekendPlannerResponse doInBackground(Void... params) {
+			// TODO: handle errors?
 			return mWeekendPlannerService.weekendize(buildRequest());
 		}
 		
 		@Override
 		protected void onPostExecute(WeekendPlannerResponse response) {
 			mAlertDialog.cancel();
-			// transition fragment based on response
+			// TODO: transition fragment based on response
+			// TODO: write response fragment
+			// TODO: error handling
 		}
 		
 		// assumes input has been verified
@@ -246,13 +245,15 @@ public class PromptFragment extends Fragment
 
 		@Override
 		protected CityInfoResponse doInBackground(Void... params) {
+			// TODO: handle errors?
 			return mWeekendPlannerService.queryCities(mCountry);
 		}
 		
 		@Override
 		protected void onPostExecute(CityInfoResponse response) {
+			// TODO: error handling
 			for(City city : response.Cities) {
-				mCities.put(city.name, city);
+				mCities.put(city.getName(), city);
 			}
 			
 			ArrayAdapter<String> cityAdapter =
