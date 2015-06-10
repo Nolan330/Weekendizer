@@ -1,6 +1,11 @@
 package example.web.model;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
+import android.os.Parcel;
+import android.os.Parcelable;
 
 import com.google.gson.annotations.SerializedName;
 
@@ -9,7 +14,7 @@ import com.google.gson.annotations.SerializedName;
  * different variations of things to do, selectable by the user
  * based on personal preferences
  */
-public class TripVariant {
+public class TripVariant implements Parcelable {
 	
 	/**
 	 * The current budget remaining for this variant
@@ -32,8 +37,33 @@ public class TripVariant {
 	@SerializedName("places")
 	private List<List<Place>> mPlaces;
 	
+	@SuppressWarnings("unchecked")
+	public TripVariant(Parcel source) {
+		mCurrentBudget = source.readDouble();
+		mSchedule = (List<Event>) source.readValue(null);
+		mPlaces = (List<List<Place>>) source.readValue(null);
+	}
+	
 	public List<Event> getSchedule() {
 		return mSchedule;
+	}
+	
+	public Set<String> getCategories() {
+		Set<String> categories = new HashSet<String>();
+		for(Event e : mSchedule) {
+			categories.addAll(e.getCategories());
+		}
+		return categories;
+	}
+	
+	public Set<String> getTypes() {
+		Set<String> types = new HashSet<String>();
+		for(List<Place> list : mPlaces) {
+			for(Place p : list) {
+				types.add(p.getType());
+			}
+		}
+		return types;
 	}
 	
 	public Double getRemainingBudget() {
@@ -48,5 +78,35 @@ public class TripVariant {
 		return "Remaining Budget: " + mCurrentBudget + ", "
 				+ mSchedule.toString() + "}";
 	}
+	
+	/**
+	 * Required by the Parcelable interface within the Android
+	 * framework.
+	 */
+	@Override
+	public int describeContents() {
+		// No special contents (i.e. FileDescriptors)
+		return 0;
+	}
+
+	@Override
+	public void writeToParcel(Parcel dest, int flags) {
+		dest.writeDouble(mCurrentBudget);
+		dest.writeValue(mSchedule);
+		dest.writeValue(mPlaces);
+	}
+	
+	public static final Parcelable.Creator<TripVariant>
+			CREATOR = new Creator<TripVariant>() {
+		@Override
+		public TripVariant createFromParcel(Parcel source) {
+			return new TripVariant(source);
+		}
+		
+		@Override
+		public TripVariant[] newArray(int size) {
+		    return new TripVariant[size];
+		}
+	};
 	
 }

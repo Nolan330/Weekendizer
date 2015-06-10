@@ -4,14 +4,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
-import com.squareup.okhttp.OkHttpClient;
-
-import retrofit.RestAdapter;
-import retrofit.RestAdapter.LogLevel;
-import retrofit.android.AndroidLog;
-import retrofit.client.OkClient;
+import retrofit.RetrofitError;
 import android.app.AlertDialog;
 import android.app.Fragment;
+import android.app.FragmentManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -26,9 +22,10 @@ import android.widget.Spinner;
 import android.widget.Toast;
 import example.web.model.City;
 import example.web.requests.WeekendPlannerRequest;
-import example.web.responses.CityInfoResponse;
+import example.web.responses.CityResponse;
 import example.web.responses.WeekendPlannerResponse;
 import example.web.services.WeekendPlannerService;
+import example.web.utils.RetrofitAdapterUtils;
 import example.weekendizer.R;
 
 /**
@@ -38,10 +35,21 @@ import example.weekendizer.R;
  */
 public class PromptFragment extends Fragment
 						    implements OnClickListener {
+	
+	/**
+	 * A tag by which to find the Fragment in the stack
+	 */
+	public static final String FRAGMENT_TAG = "prompt_fragment";
+
 	/**
 	 * Fragment manager to swap out fragments 
 	 */
-	//private FragmentManager mFragmentManager;
+	private FragmentManager mFragmentManager;
+	
+	/**
+	 * The CityResponse that this fragment was created with
+	 */
+	private CityResponse mResults;
 	
 	/**
 	 * Dialog indicating the server is working
@@ -53,9 +61,9 @@ public class PromptFragment extends Fragment
 	 */
 	private Spinner mOriginCityPrompt;
 	private Spinner mDestinationCityPrompt;
+	private ArrayAdapter<String> mCityAdapter;
 	private LinearLayout mDestinationLayout;
 	private EditText mBudgetPrompt;
-	
 	private Button mEnterDestinationButton;
 	private Button mRemoveDestinationButton;
 	private Button mWeekendizeButton;
@@ -70,13 +78,36 @@ public class PromptFragment extends Fragment
 	 */
 	private Map<String, City> mCities;
 	
+	/**
+	 * The name for the argument with which this fragment has been started
+	 */
+	public static final String CITY_ARG = "cities";
+	
+	/**
+	 * Factory method that is commonly accepted as the way to
+	 * instantiate Fragments.
+	 */
+	public static PromptFragment newInstance(CityResponse response) {
+		// This fragment needs no parameters for instantiation,
+		// so simply return a new PromptFragment
+		PromptFragment promptFragment = new PromptFragment();
+		
+		Bundle arguments = new Bundle();
+		arguments.putParcelable(CITY_ARG, response);
+		promptFragment.setArguments(arguments);
+		
+		return promptFragment;
+	}
+	
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
 		View rootView = inflater.inflate(R.layout.fragment_main, container,
 				false);
 
-        //mFragmentManager = getFragmentManager();
+        mFragmentManager = getFragmentManager();
+        
+        mResults = (CityResponse) getArguments().get(CITY_ARG);
         
         mAlertDialog = 
 			new AlertDialog.Builder(getActivity()).create();
@@ -105,27 +136,28 @@ public class PromptFragment extends Fragment
 			(Button) rootView.findViewById(R.id.weekendize);
 		mWeekendizeButton.setOnClickListener(this);
 
-		OkHttpClient client = new OkHttpClient();
-		RestAdapter weekendPlannerAdapter =
-    		new RestAdapter.Builder()
-				.setClient(new OkClient(client))
-				.setLogLevel(LogLevel.FULL)
-				.setLog(new AndroidLog("MYREQUESTS"))
-				.setEndpoint("http://10.0.3.2:8080/WeekendPlanner/")
-				.build();
-        
         mWeekendPlannerService =
-        	weekendPlannerAdapter.create(WeekendPlannerService.class);
+        	RetrofitAdapterUtils.makeWeekendPlannerService();
         
-        mCities = new HashMap<String, City>();
+    	mCities = new HashMap<String, City>();
+    	
+    	for(City city : mResults.getCities()) {
+			mCities.put(city.getName(), city);
+		}
+		
+		mCityAdapter =
+			new ArrayAdapter<String>(
+				getActivity(),
+				android.R.layout.simple_spinner_item,
+				mCities.keySet().toArray(
+					new String[mCities.size()]));
+		mCityAdapter.setDropDownViewResource(
+			android.R.layout.simple_spinner_dropdown_item);
+		
+		mOriginCityPrompt.setAdapter(mCityAdapter);
+		mDestinationCityPrompt.setAdapter(mCityAdapter);
         
 		return rootView;
-	}
-	
-	@Override
-	public void onStart() {
-		super.onStart();
-		new CityInfoTask().execute();
 	}
 
 	@Override
@@ -156,7 +188,7 @@ public class PromptFragment extends Fragment
 				View.VISIBLE : View.GONE);
 	}
 	
-	private boolean isValidInput() {
+	private Boolean isValidInput() {
 		String budget = mBudgetPrompt.getText().toString();
 	
 		try {
@@ -183,16 +215,31 @@ public class PromptFragment extends Fragment
 
 		@Override
 		protected WeekendPlannerResponse doInBackground(Void... params) {
-			// TODO: handle errors?
-			return mWeekendPlannerService.weekendize(buildRequest());
+			WeekendPlannerResponse resp = new WeekendPlannerResponse();
+			try {
+				resp = mWeekendPlannerService.weekendize(buildRequest());
+			} catch (RetrofitError e) {
+				resp.setError(e.getMessage() 
+					+ " " + e.getBodyAs(String.class));
+			}
+			return resp;
 		}
 		
 		@Override
 		protected void onPostExecute(WeekendPlannerResponse response) {
+			if (response.getError() != null) {
+				showToast(response.getError());
+			} else {
+				mFragmentManager
+					.beginTransaction()
+					.replace(
+						R.id.container, 
+						ResultsFragment.newInstance(response), 
+						ResultsFragment.FRAGMENT_TAG)
+					.addToBackStack(ResultsFragment.FRAGMENT_TAG)
+					.commit();
+			}
 			mAlertDialog.cancel();
-			// TODO: transition fragment based on response
-			// TODO: write response fragment
-			// TODO: error handling
 		}
 		
 		// assumes input has been verified
@@ -222,56 +269,6 @@ public class PromptFragment extends Fragment
 		}
     }
     
-    private class CityInfoTask
-    	extends AsyncTask<Void, Void, CityInfoResponse> {
-    	
-    	private String mCountry;
-    	private final String DEFAULT_COUNTRY = "US";
-    	
-    	public CityInfoTask() {
-    		mCountry = DEFAULT_COUNTRY;
-    	}
-     	
-    	@SuppressWarnings("unused")
-		public CityInfoTask(String country) {
-    		mCountry = country;
-    	}
-    	
-    	@Override
-    	protected void onPreExecute() {
-    		showDialog("Gathering City Info",
- 				   	   "Finding eligible cities for your country");
-    	}
-
-		@Override
-		protected CityInfoResponse doInBackground(Void... params) {
-			// TODO: handle errors?
-			return mWeekendPlannerService.queryCities(mCountry);
-		}
-		
-		@Override
-		protected void onPostExecute(CityInfoResponse response) {
-			// TODO: error handling
-			for(City city : response.Cities) {
-				mCities.put(city.getName(), city);
-			}
-			
-			ArrayAdapter<String> cityAdapter =
-				new ArrayAdapter<String>(
-					getActivity(),
-					android.R.layout.simple_spinner_item,
-					mCities.keySet().toArray(
-						new String[mCities.size()]));
-			cityAdapter.setDropDownViewResource(
-				android.R.layout.simple_spinner_dropdown_item);
-			
-			mOriginCityPrompt.setAdapter(cityAdapter);
-			mDestinationCityPrompt.setAdapter(cityAdapter);
-						
-			mAlertDialog.cancel();
-		}
-    }
-    
     /**
      * Shows a dialog to the user, indicating that a long
      * running background operation is in progress
@@ -288,7 +285,7 @@ public class PromptFragment extends Fragment
     private void showToast(String msg) {
         Toast.makeText(this.getActivity(),
                        msg,
-                       Toast.LENGTH_SHORT).show();
+                       Toast.LENGTH_LONG).show();
     }
     
 }

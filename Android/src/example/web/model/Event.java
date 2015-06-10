@@ -1,6 +1,11 @@
 package example.web.model;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
+import android.os.Parcel;
+import android.os.Parcelable;
 
 import com.google.gson.annotations.SerializedName;
 
@@ -8,7 +13,7 @@ import com.google.gson.annotations.SerializedName;
  * A POJO representing the fields of a StubHub event necessary for
  * weekend planning
  */
-public class Event {
+public class Event implements Parcelable {
 
 	/**
 	 * Default Values
@@ -41,12 +46,30 @@ public class Event {
 	 */
 	private String mEndDateTime;
 	
+	@SuppressWarnings("unchecked")
+	public Event(Parcel source) {
+		mTitle = source.readString();
+		mStartDateTime = source.readString();
+		mVenue = (Venue) source.readValue(null);
+		mTicketInfo = (TicketInfo) source.readValue(null);
+		mCategories = (List<Category>) source.readValue(null);
+		mGroupings = (List<Category>) source.readValue(null);
+	}
+	
 	public String getTitle() {
 		return mTitle;
 	}
 	
 	public Double getTicketPrice() {
 		return mTicketInfo.getPrice();
+	}
+	
+	public Set<String> getCategories() {
+		Set<String> categories = new HashSet<String>();
+		for(Category c : mCategories) {
+			categories.add(c.toString());
+		}
+		return categories;
 	}
 	
 	@Override
@@ -56,11 +79,44 @@ public class Event {
 			+ " for " + mTicketInfo
 			+ " located at " + mVenue;
 	}
+	
+	/**
+	 * Required by the Parcelable interface within the Android
+	 * framework.
+	 */
+	@Override
+	public int describeContents() {
+		// No special contents (i.e. FileDescriptors)
+		return 0;
+	}
+
+	@Override
+	public void writeToParcel(Parcel dest, int flags) {
+		dest.writeString(mTitle);
+		dest.writeString(mStartDateTime);
+		dest.writeValue(mVenue);
+		dest.writeValue(mTicketInfo);
+		dest.writeValue(mCategories);
+		dest.writeValue(mGroupings);
+	}
+	
+	public static final Parcelable.Creator<Event>
+			CREATOR = new Creator<Event>() {
+		@Override
+		public Event createFromParcel(Parcel source) {
+			return new Event(source);
+		}
+		
+		@Override
+		public Event[] newArray(int size) {
+		    return new Event[size];
+		}
+	};
 
 	/**
 	 * Nested POJO upon which the Event POJO relies
 	 */
-	public class Venue {
+	public class Venue implements Parcelable {
 		@SerializedName("name")
 		private String mName;
 		
@@ -76,6 +132,14 @@ public class Event {
 		@SerializedName("state")
 		private String mState;
 		
+		public Venue(Parcel source) {
+			mName = source.readString();
+			mTimezone = source.readString();
+			mStreetAddress = source.readString();
+			mCity = source.readString();
+			mState = source.readString();
+		}
+		
 		@Override
 		public String toString() {
 			return mName + ", " 
@@ -83,12 +147,44 @@ public class Event {
 					+ mCity + ", " 
 					+ mState;
 		}
+		
+		/**
+		 * Required by the Parcelable interface within the Android
+		 * framework.
+		 */
+		@Override
+		public int describeContents() {
+			// No special contents (i.e. FileDescriptors)
+			return 0;
+		}
+
+		@Override
+		public void writeToParcel(Parcel dest, int flags) {
+			dest.writeString(mName);
+			dest.writeString(mTimezone);
+			dest.writeString(mStreetAddress);
+			dest.writeString(mCity);
+			dest.writeString(mState);
+		}
+		
+		public final Parcelable.Creator<Venue>
+				VENUE_CREATOR = new Creator<Venue>() {
+			@Override
+			public Venue createFromParcel(Parcel source) {
+				return new Venue(source);
+			}
+			
+			@Override
+			public Venue[] newArray(int size) {
+			    return new Venue[size];
+			}
+		};
 	}
 	
 	/**
 	 * Nested POJO upon which Event relies
 	 */
-	public class TicketInfo {
+	public class TicketInfo implements Parcelable {
 		@SerializedName("minPrice")
 		private String mMinPrice;
 
@@ -100,6 +196,11 @@ public class Event {
 			mCurrencyCode = code;
 		}
 		
+		public TicketInfo(Parcel source) {
+			mMinPrice = source.readString();
+			mCurrencyCode = source.readString();
+		}
+		
 		public Double getPrice() {
 			return Double.valueOf(mMinPrice);
 		}
@@ -108,21 +209,84 @@ public class Event {
 		public String toString() {
 			return "$" + mMinPrice + " " + mCurrencyCode;
 		}
+		
+		/**
+		 * Required by the Parcelable interface within the Android
+		 * framework.
+		 */
+		@Override
+		public int describeContents() {
+			// No special contents (i.e. FileDescriptors)
+			return 0;
+		}
+
+		@Override
+		public void writeToParcel(Parcel dest, int flags) {
+			dest.writeString(mMinPrice);
+			dest.writeString(mCurrencyCode);
+		}
+		
+		public final Parcelable.Creator<TicketInfo>
+				TICKETINFO_CREATOR = new Creator<TicketInfo>() {
+			@Override
+			public TicketInfo createFromParcel(Parcel source) {
+				return new TicketInfo(source);
+			}
+			
+			@Override
+			public TicketInfo[] newArray(int size) {
+			    return new TicketInfo[size];
+			}
+		};
 	}
 	
 	/**
 	 * Nested POJO upon which Event relies
 	 */
-	public class Category {
+	public class Category implements Parcelable {
 		@SerializedName("id")
 		private String mCategoryId;
 		
 		@SerializedName("name")
 		private String mName;
 		
+		public Category(Parcel source) {
+			mCategoryId = source.readString();
+			mName = source.readString();
+		}
+		
 		public String toString() {
 			return mName;
 		}
+		
+		/**
+		 * Required by the Parcelable interface within the Android
+		 * framework.
+		 */
+		@Override
+		public int describeContents() {
+			// No special contents (i.e. FileDescriptors)
+			return 0;
+		}
+
+		@Override
+		public void writeToParcel(Parcel dest, int flags) {
+			dest.writeString(mCategoryId);
+			dest.writeString(mName);
+		}
+		
+		public final Parcelable.Creator<Category>
+				VENUE_CREATOR = new Creator<Category>() {
+			@Override
+			public Category createFromParcel(Parcel source) {
+				return new Category(source);
+			}
+			
+			@Override
+			public Category[] newArray(int size) {
+			    return new Category[size];
+			}
+		};
 	}
 
 }

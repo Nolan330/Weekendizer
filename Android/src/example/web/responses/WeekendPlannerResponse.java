@@ -2,6 +2,9 @@ package example.web.responses;
 
 import java.util.List;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import com.google.gson.annotations.SerializedName;
 
 import example.web.model.City;
@@ -20,7 +23,7 @@ import example.web.model.Weather;
  * selecting the various events for each day, tracking
  * remaining budget for each variant of the weekend, etc.
  */
-public class WeekendPlannerResponse {
+public class WeekendPlannerResponse implements Parcelable {
 	
 	/**
 	 * A list of different variations of things to do
@@ -61,12 +64,50 @@ public class WeekendPlannerResponse {
 	@SerializedName("weather")
 	private List<Weather> mWeather;
 	
+	/**
+	 * The error message from the server to display to the
+	 * user via a Toast in the case of an exception
+	 */
+	private String mError;
+	
+	public WeekendPlannerResponse() {
+		mTripVariants = null;
+		mInitBudget = null;
+		mOriginCity = null;
+		mDestinationCity = null;
+		mFlight = null;
+		mWeather = null;
+		mError = null;
+	}
+	
+	/**
+	 * Teach the WeekendPlannerResponse how to create
+	 * itself from a parcel created in writeToParcel()
+	 */
+	@SuppressWarnings("unchecked")
+	public WeekendPlannerResponse(Parcel source) {
+		mTripVariants = (List<TripVariant>) source.readValue(null);
+		mInitBudget = source.readDouble();
+		mOriginCity = (City) source.readValue(null);
+		mDestinationCity = (City) source.readValue(null);
+		mFlight = (Flight) source.readValue(null);
+		mWeather = (List<Weather>) source.readValue(null);
+	}
+	
+	public List<TripVariant> getTripVariants() {
+		return mTripVariants;
+	}
+	
 	public Double getInitialBudget() {
 		return mInitBudget;
 	}
 	
 	public String getOriginCityCode() {
 		return mOriginCity.getCode();
+	}
+	
+	public String getOriginCityName() {
+		return mOriginCity.getName();
 	}
 	
 	public String getDestinationCityCode() {
@@ -85,6 +126,10 @@ public class WeekendPlannerResponse {
 		return mFlight;
 	}
 	
+	public String getDepartingDepartureDateTime() {
+		return mFlight.getDepartingDepartureDateTime();
+	}
+	
 	public String getDepartingArrivalDateTime() {
 		return mFlight.getDepartingArrivalDateTime();
 	}
@@ -95,6 +140,15 @@ public class WeekendPlannerResponse {
 	
 	public List<Weather> getWeather() {
 		return mWeather;
+	}
+	
+	public WeekendPlannerResponse setError(String errorMessage) {
+		mError = errorMessage;
+		return this;
+	}
+	
+	public String getError() {
+		return mError;
 	}
 	
 	public String toString() {
@@ -108,5 +162,38 @@ public class WeekendPlannerResponse {
 		}
 		return "Flight: " + mFlight + "\nVariants:" + variants;
 	}
+
+	/**
+	 * Required by the Parcelable interface within the Android
+	 * framework
+	 */
+	@Override
+	public int describeContents() {
+		// No special contents (i.e. FileDescriptors)
+		return 0;
+	}
+
+	@Override
+	public void writeToParcel(Parcel dest, int flags) {
+		dest.writeValue(mTripVariants);
+		dest.writeDouble(mInitBudget);
+		dest.writeValue(mOriginCity);
+		dest.writeValue(mDestinationCity);
+		dest.writeValue(mFlight);
+		dest.writeValue(mWeather);
+	}
+	
+	public static final Parcelable.Creator<WeekendPlannerResponse>
+			CREATOR = new Creator<WeekendPlannerResponse>() {
+	    @Override
+	    public WeekendPlannerResponse createFromParcel(Parcel source) {
+	    	return new WeekendPlannerResponse(source);
+	    }
+
+	    @Override
+	    public WeekendPlannerResponse[] newArray(int size) {
+	        return new WeekendPlannerResponse[size];
+	    }
+	};
 
 }
