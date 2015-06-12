@@ -22,12 +22,12 @@ public class PlacesOps extends BaseOps<PlacesService> {
 	 * Default values
 	 */
 	private final List<String> OUTDOOR_CONDITIONS = 
-		Arrays.asList("Additional", "Clouds");
+		Arrays.asList("Additional", "Clouds", "Clear");
 	private final String INDOOR_PLACES =
 		"aquarium|art_gallery|bowling_alley|movie_theater|museum|shopping_mall";
 	private final String OUTDOOR_PLACES =
 		"amusement_park|campground|park|stadium|zoo";
-	private final Integer RADIUS_METERS = 25000;
+	private final Integer RADIUS_METERS = 35000;
 	
 	public PlacesOps(String endpoint) {
 		super(endpoint, PlacesService.class, new PlacesAuthUtils());

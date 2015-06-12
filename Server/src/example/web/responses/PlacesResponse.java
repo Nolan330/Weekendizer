@@ -1,5 +1,6 @@
 package example.web.responses;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
@@ -32,9 +33,12 @@ public class PlacesResponse {
 	 * Selects and returns NUM_PLACES places at random in a list
 	 */
 	public List<Place> getRandomPlaces() {
-		return new Random().ints(NUM_PLACES, 0, mPlaces.size() - 1)
-			.mapToObj(mPlaces::get)
-			.collect(Collectors.toList());
+		List<Place> ret = new ArrayList<Place>(
+			new Random().ints(0, mPlaces.size())
+				.mapToObj(mPlaces::get)
+				.limit(NUM_PLACES)
+				.collect(Collectors.toSet()));
+		return ret;
 	}
 	
 }

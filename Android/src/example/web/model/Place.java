@@ -37,6 +37,11 @@ public class Place implements Parcelable {
 		return mTypes.get(0);
 	}
 	
+	@Override
+	public String toString() {
+		return mName;
+	}
+	
 	/**
 	 * Required by the Parcelable interface within the Android
 	 * framework.

@@ -36,7 +36,7 @@ public class Weather implements Parcelable {
 	
 	@Override
 	public String toString() {
-		return "Temperature: " + mTemperature + "F, Conditions:" + mConditions;
+		return mTemperature + "F and " + getDayCondition();
 	}
 	
 	/**

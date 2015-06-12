@@ -1,7 +1,10 @@
 package example.web.model;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import android.os.Parcel;
@@ -14,11 +17,6 @@ import com.google.gson.annotations.SerializedName;
  * weekend planning
  */
 public class Event implements Parcelable {
-
-	/**
-	 * Default Values
-	 */
-	private static final Integer DURATION_HOURS = 2;
 	
 	/**
 	 * Member variables tied to serialization
@@ -41,11 +39,6 @@ public class Event implements Parcelable {
 	@SerializedName("groupings")
 	private List<Category> mGroupings;
 	
-	/**
-	 * Member variables maintained by the class
-	 */
-	private String mEndDateTime;
-	
 	@SuppressWarnings("unchecked")
 	public Event(Parcel source) {
 		mTitle = source.readString();
@@ -58,6 +51,21 @@ public class Event implements Parcelable {
 	
 	public String getTitle() {
 		return mTitle;
+	}
+	
+	public String getStartDateTime() {
+		return mStartDateTime;
+	}
+	
+	public String getStartTimeAsFormat(SimpleDateFormat outFormat) {
+		SimpleDateFormat inFormat = 
+			new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss", Locale.US);
+		try {
+			return outFormat.format(inFormat.parse(mStartDateTime));
+		} catch (ParseException e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 	
 	public Double getTicketPrice() {
@@ -75,9 +83,10 @@ public class Event implements Parcelable {
 	@Override
 	public String toString() {
 		return mTitle 
-			+ " at " + mStartDateTime
-			+ " for " + mTicketInfo
-			+ " located at " + mVenue;
+			+ " (" + mTicketInfo + ")"
+			+ " " + getStartTimeAsFormat(
+				new SimpleDateFormat("hh:mm a", Locale.US))
+			+ " @ " + mVenue;
 	}
 	
 	/**
@@ -143,9 +152,7 @@ public class Event implements Parcelable {
 		@Override
 		public String toString() {
 			return mName + ", " 
-					+ mStreetAddress + " "
-					+ mCity + ", " 
-					+ mState;
+					+ mStreetAddress;
 		}
 		
 		/**
@@ -207,7 +214,7 @@ public class Event implements Parcelable {
 		
 		@Override
 		public String toString() {
-			return "$" + mMinPrice + " " + mCurrencyCode;
+			return "$" + mMinPrice;
 		}
 		
 		/**

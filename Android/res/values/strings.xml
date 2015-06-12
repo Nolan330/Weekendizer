@@ -26,5 +26,8 @@
     <string name="remainingBudget">Remaining:</string>
     <string name="ticketCategories">Ticket Categories:</string>
     <string name="placeTypes">Place Types:</string>
+    
+    <string name="places">Places:</string>
+    <string name="events">Events:</string>
 
 </resources>

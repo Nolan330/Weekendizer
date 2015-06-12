@@ -1,7 +1,12 @@
 package example.web.model;
 
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 import android.os.Parcel;
@@ -48,6 +53,20 @@ public class TripVariant implements Parcelable {
 		return mSchedule;
 	}
 	
+	public Map<String, List<Event>> getScheduleByDay() {
+		Map<String, List<Event>> organizedByDay = 
+			new HashMap<String, List<Event>>();
+		SimpleDateFormat outFormat = new SimpleDateFormat("EEEE", Locale.US);
+		
+		for(Event e : mSchedule) {
+			String startTime = e.getStartTimeAsFormat(outFormat);
+			if (!organizedByDay.containsKey(startTime))
+				organizedByDay.put(startTime, new ArrayList<Event>());
+			organizedByDay.get(startTime).add(e);
+		}
+		return organizedByDay;
+	}
+	
 	public Set<String> getCategories() {
 		Set<String> categories = new HashSet<String>();
 		for(Event e : mSchedule) {
@@ -72,6 +91,10 @@ public class TripVariant implements Parcelable {
 	
 	public Double subtractFromBudget(Double amount) {
 		return mCurrentBudget -= amount;
+	}
+	
+	public List<List<Place>> getPlaces() {
+		return mPlaces;
 	}
 	
 	public String toString() {

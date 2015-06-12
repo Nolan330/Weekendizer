@@ -100,15 +100,16 @@ public class ResultsFragment extends Fragment {
 		Date returningDeparture = null;
 		SimpleDateFormat formatter = 
 			new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US);
+		
 		try {
 			departingDeparture = 
 				formatter.parse(mResults.getDepartingDepartureDateTime());
 			returningDeparture =
 				formatter.parse(mResults.getReturningDepartureDateTime());
 		} catch (ParseException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
 		mDepartingDate.setText(
 			SimpleDateFormat.getDateTimeInstance().format(departingDeparture));
 		mReturningDate.setText(
@@ -159,10 +160,11 @@ public class ResultsFragment extends Fragment {
 
 		@SuppressLint("InflateParams")
 		@Override
-		public View getView(final int position, View currentView, ViewGroup parent) {
+		public View getView(final int position,
+				View currentView, ViewGroup parent) {
 			View newView = currentView != null ?
 				currentView :
-				mViewInflater.inflate(R.layout.tripvariant_row, null);
+				mViewInflater.inflate(R.layout.row_tripvariant, null);
 			
 			TripVariant variant = mData.get(position);
 	     
@@ -188,14 +190,16 @@ public class ResultsFragment extends Fragment {
 						.beginTransaction()
 						.replace(
 							R.id.container, 
-							TripDetailFragment.newInstance(
-								mData.get(position)),
+							TripDetailFragment
+								.newInstance(
+									position + 1,
+									mData.get(position),
+									mResults.getWeather()),
 							TripDetailFragment.FRAGMENT_TAG)
 						.addToBackStack(TripDetailFragment.FRAGMENT_TAG)
 						.commit();
 				}
 	        });
-	        
 	        return newView;
 		}
 	}
